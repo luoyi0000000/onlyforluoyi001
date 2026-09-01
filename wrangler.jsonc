@@ -3,10 +3,19 @@
   // project ships HTML, CSS, JS and one font, so no Worker script runs at all
   // and there is nothing on the edge that could see a visitor's data.
   //
-  // Deploy with `pnpm run deploy` (build + upload). `wrangler` is intentionally
-  // not a dependency of this project — see README.
+  // Deploy with `pnpm run deploy`. `wrangler` is intentionally not a dependency
+  // of this project — see README.
   "name": "toolbox",
   "compatibility_date": "2026-09-01",
+
+  // Build `out/` as part of deploying, instead of relying on whoever runs the
+  // deploy to remember. Cloudflare Workers Builds clones the repo, installs
+  // dependencies and then runs a bare `wrangler deploy` — and `out/` is
+  // git-ignored, so without this hook the deploy fails with "the directory
+  // specified by the assets.directory field does not exist".
+  "build": {
+    "command": "pnpm run build",
+  },
 
   "assets": {
     // `pnpm run build` writes this directory. It is git-ignored; the source of

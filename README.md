@@ -79,8 +79,10 @@ pnpm run audit:external   # 机械验证「零外部请求」，构建后跑
 `wrangler.jsonc` 已经配好：Static Assets、`directory: ./out`、`html_handling: auto-trailing-slash`、`not_found_handling: 404-page`、日志关闭。没有 `main`，也就是**边缘上没有任何脚本在跑**。
 
 ```bash
-pnpm run deploy       # = pnpm run build && pnpm dlx wrangler@4 deploy
+pnpm run deploy       # = pnpm dlx wrangler@4 deploy
 ```
+
+`out/` 是 git-ignored 的，所以 `wrangler.jsonc` 里挂了 `build.command: "pnpm run build"` —— 部署前 wrangler 自己会先构建。这样无论是本地 `pnpm run deploy`，还是 Cloudflare Workers Builds 那种「clone 仓库 → `pnpm install` → 裸跑 `wrangler deploy`」的流程，都不会因为 `out/` 不存在而失败；接了 Git 自动部署时，控制台的 Build command 留空即可。
 
 注意是 `pnpm run deploy`，不能写成 `pnpm deploy` —— 后者是 pnpm 自己的内置命令（把包部署到目录），不会执行这个脚本。
 

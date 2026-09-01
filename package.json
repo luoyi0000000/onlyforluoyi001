@@ -18,7 +18,7 @@
     "audit:external": "node scripts/audit-external-requests.mjs",
     "test": "node --test \"tests/*.test.ts\"",
     "serve:out": "node scripts/serve-out.mjs",
-    "deploy": "pnpm run build && pnpm dlx wrangler@4 deploy",
+    "deploy": "pnpm dlx wrangler@4 deploy",
     "check": "pnpm run typecheck && pnpm run lint && pnpm run format:check && pnpm run test"
   },
   "dependencies": {
