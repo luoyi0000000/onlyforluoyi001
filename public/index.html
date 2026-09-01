@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="robots" content="noindex" />
+    <title>工具箱 / Toolbox</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="alternate" hreflang="zh-Hans" href="/zh/" />
+    <link rel="alternate" hreflang="en" href="/en/" />
+    <link rel="alternate" hreflang="x-default" href="/zh/" />
+
+    <!--
+      `/` is a language gate, not a page. A static export cannot issue an HTTP 3xx,
+      and Cloudflare Static Assets serves files verbatim, so the choice is made here:
+      a remembered preference wins, otherwise `navigator.language` decides, and with
+      JavaScript off the meta refresh plus the visible links below still get the
+      visitor somewhere. Nothing here contacts the network.
+    -->
+    <script>
+      ;(function () {
+        try {
+          var supported = ['zh', 'en']
+          var target = null
+
+          // An explicit switch in the app writes this key and must outrank the browser.
+          try {
+            var saved = localStorage.getItem('toolbox.locale')
+            if (saved && supported.indexOf(saved) !== -1) target = saved
+          } catch (e) {
+            /* Storage can be blocked outright; fall through to the language guess. */
+          }
+
+          if (!target) {
+            var tags =
+              navigator.languages && navigator.languages.length
+                ? navigator.languages
+                : [navigator.language || 'zh']
+            for (var i = 0; i < tags.length && !target; i++) {
+              var tag = String(tags[i]).toLowerCase()
+              if (tag.indexOf('zh') === 0) target = 'zh'
+              else if (tag.indexOf('en') === 0) target = 'en'
+            }
+          }
+
+          // `replace` keeps `/` out of session history, so Back leaves the site
+          // instead of bouncing through the gate again.
+          location.replace('/' + (target || 'zh') + '/')
+        } catch (e) {
+          location.replace('/zh/')
+        }
+      })()
+    </script>
+
+    <noscript><meta http-equiv="refresh" content="0; url=/zh/" /></noscript>
+
+    <style>
+      :root {
+        color-scheme: dark light;
+        --bg: #0a0a0f;
+        --fg: #f2f3f8;
+        --muted: #b3b6c4;
+        --panel: rgb(255 255 255 / 0.06);
+        --panel-border: rgb(255 255 255 / 0.12);
+        --pill: rgb(0 0 0 / 0.24);
+        --accent-a: #6366f1;
+        --accent-b: #22d3ee;
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f7fa;
+          --fg: #16171f;
+          --muted: #5b5f70;
+          --panel: rgb(255 255 255 / 0.62);
+          --panel-border: rgb(0 0 0 / 0.08);
+          --pill: rgb(0 0 0 / 0.05);
+          --accent-a: #4f46c8;
+          --accent-b: #0e7490;
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background-color: var(--bg);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: calc(2rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+          calc(2rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
+        color: var(--fg);
+        font-family:
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          'Microsoft YaHei',
+          'PingFang SC',
+          'Noto Sans SC',
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+      }
+
+      main {
+        width: 100%;
+        max-width: 26rem;
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        background-color: var(--panel);
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      h1 {
+        margin: 0 0 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+      }
+
+      p {
+        margin: 0 0 1.25rem;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 0.5rem;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 1.25rem;
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        background-color: var(--pill);
+        color: var(--fg);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+      }
+
+      a:focus-visible {
+        outline: 2px solid var(--accent-a);
+        outline-offset: 2px;
+      }
+
+      a.primary {
+        border-color: transparent;
+        background-image: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+        color: #fff;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>工具箱 / Toolbox</h1>
+      <p>正在按浏览器语言跳转…<br /><span lang="en">Redirecting to your language…</span></p>
+      <div class="links">
+        <a class="primary" href="/zh/" hreflang="zh-Hans" lang="zh-Hans">简体中文</a>
+        <a href="/en/" hreflang="en" lang="en">English</a>
+      </div>
+    </main>
+  </body>
+</html>

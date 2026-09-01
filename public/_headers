@@ -1,0 +1,57 @@
+# Response headers for Cloudflare Workers Static Assets.
+#
+# This file is copied verbatim from `public/` into `out/` by the export, and
+# Cloudflare reads it from the root of the assets directory.
+#
+# It is not required for the site to work — it hardens it. Every rule here is a
+# restriction; nothing below grants the page a capability it does not already
+# have.
+
+/*
+  # --- Content Security Policy -------------------------------------------
+  # `script-src` has to allow inline scripts, and that is worth being honest
+  # about. Two inline scripts are unavoidable in a static export: the anti-flash
+  # theme script (it must run before first paint, so it cannot be an external
+  # request) and Next's own hydration payload, which is inlined per page. A
+  # nonce needs a server generating one per response, and this site has no
+  # server; per-build hashes would change on every page and every rebuild.
+  #
+  # What bounds the risk instead: there is no backend, no API, no user content,
+  # no `dangerouslySetInnerHTML`, and `connect-src 'self'` means injected script
+  # would have nowhere to send anything.
+  #
+  # `img-src data:` is for the noise overlay, which is an inline SVG data URI
+  # used as a CSS background — CSS `url()` in a background is governed by
+  # `img-src`, not `style-src`.
+  # `worker-src` allows `blob:` because a future tool that does heavy local
+  # computation (hashing a large file, decoding an image) will want a Web Worker
+  # built from a blob to keep the UI responsive. Nothing currently uses one.
+  # `media-src 'none'` is likewise a today statement: a tool that previews audio
+  # or video from a local file has to widen it here.
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'self' blob:; manifest-src 'self'; form-action 'none'; frame-ancestors 'none'
+  # No MIME sniffing: a .txt download must never be executed as script.
+  X-Content-Type-Options: nosniff
+  # Nothing on this site needs to know where a visitor came from.
+  Referrer-Policy: no-referrer
+  # `frame-ancestors 'none'` above already covers modern browsers; this is for
+  # the ones that only understand the legacy header.
+  X-Frame-Options: DENY
+  Cross-Origin-Opener-Policy: same-origin
+  Cross-Origin-Resource-Policy: same-origin
+  # Every powerful feature this site does not use, denied explicitly. Clipboard
+  # access is deliberately absent from this list: the copy button needs it.
+  Permissions-Policy: accelerometer=(), autoplay=(), camera=(), display-capture=(), encrypted-media=(), fullscreen=(), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), midi=(), payment=(), picture-in-picture=(), publickey-credentials-get=(), screen-wake-lock=(), usb=(), xr-spatial-tracking=()
+  # One year, this host only. `includeSubDomains` is left off on purpose: it
+  # would commit every sibling subdomain of whatever domain this ends up on,
+  # which is not this project's decision to make.
+  Strict-Transport-Security: max-age=31536000
+
+# Content-addressed filenames. These can never change meaning, so they can be
+# cached for as long as the browser is willing to.
+/_next/static/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# The font filename is stable rather than hashed, so a year would be too long —
+# replacing the file would leave old visitors on the old one. Thirty days.
+/fonts/*
+  Cache-Control: public, max-age=2592000

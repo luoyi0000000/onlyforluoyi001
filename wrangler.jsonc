@@ -1,0 +1,32 @@
+{
+  // Cloudflare Workers Static Assets. There is no `main` on purpose: this
+  // project ships HTML, CSS, JS and one font, so no Worker script runs at all
+  // and there is nothing on the edge that could see a visitor's data.
+  //
+  // Deploy with `pnpm run deploy` (build + upload). `wrangler` is intentionally
+  // not a dependency of this project — see README.
+  "name": "toolbox",
+  "compatibility_date": "2026-09-01",
+
+  "assets": {
+    // `pnpm run build` writes this directory. It is git-ignored; the source of
+    // truth is the repository, not the artifact.
+    "directory": "./out",
+
+    // `next.config.ts` sets `trailingSlash: true`, so every page is a directory
+    // index. This is the handling mode that serves `out/zh/t/base64/index.html`
+    // for `/zh/t/base64` and `/zh/t/base64/`, which is what the in-site links,
+    // the command palette and any bookmark all rely on.
+    "html_handling": "auto-trailing-slash",
+
+    // Unknown paths get the hand-written `/404.html` (see
+    // `scripts/finalize-export.mjs`), not a bare Cloudflare error page.
+    "not_found_handling": "404-page",
+  },
+
+  // Request logging is off. It defaults to off, but stating it keeps the
+  // privacy promise auditable in the one file that configures the edge.
+  "observability": {
+    "enabled": false,
+  },
+}

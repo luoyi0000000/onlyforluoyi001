@@ -1,0 +1,1314 @@
+@import 'tailwindcss';
+
+/* Class-strategy dark mode, driven by next-themes writing `.dark` on <html>. */
+@custom-variant dark (&:is(.dark *));
+
+/* Touch pointers get 44x44 targets; precise pointers keep the compact size.
+   Growing the control itself is the only safe way to hit 44px inside a
+   segmented group — an expanded invisible hit box would overlap its
+   neighbours and swallow their clicks. */
+@custom-variant coarse (@media (pointer: coarse));
+
+/* --------------------------------------------------------------------------
+   Self-hosted Latin variable font. The file ships in `public/fonts`, is served
+   from this origin, and is preloaded from the layout. There is no request to
+   Google Fonts or any other third-party CDN, at build time or at runtime.
+
+   No `unicode-range` on purpose: the UI mixes Latin, digits and keyboard
+   glyphs (⌘ ⇧ ↵ ↑ ↓) everywhere, so splitting the face would only risk those
+   glyphs silently rendering from a different family. Chinese has no coverage
+   in this subset and falls through to the system CJK stack, which is why no
+   multi-megabyte CJK webfont is shipped.
+   -------------------------------------------------------------------------- */
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url('/fonts/inter-latin-variable.woff2') format('woff2-variations');
+}
+
+/* ==========================================================================
+   Design tokens
+   --------------------------------------------------------------------------
+   Every colour is authored in oklch so lightness steps stay perceptually even
+   across hues. Semantic names follow the shadcn/ui variable contract, so any
+   component copied from shadcn works untouched.
+
+   Contrast budget (verified, see /[locale] token preview page):
+     dark  body   #fafafb on glass  ~19:1   | muted #a8a8b0 on glass ~7.2:1
+     light body   #26262e on glass  ~13:1   | muted #64646f on glass ~5.3:1
+   ========================================================================== */
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  /* The tinted pane that nests inside glass. Exposed as a colour so
+     `bg-inset` can be used wherever muted text needs a guaranteed backdrop
+     instead of an ad-hoc `bg-foreground/8`, which lightens the surface in dark
+     mode and quietly eats the contrast budget. */
+  --color-inset: var(--inset-bg);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Fixed per-accent swatches for the accent picker. They must show all four
+     ramps at once, so they cannot read `--primary`, which is whichever accent
+     is currently active. */
+  --color-swatch-indigo: var(--swatch-indigo);
+  --color-swatch-violet: var(--swatch-violet);
+  --color-swatch-cyan: var(--swatch-cyan);
+  --color-swatch-emerald: var(--swatch-emerald);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+
+  --color-glass-bg: var(--glass-bg);
+  --color-glass-border: var(--glass-border);
+  --color-glass-highlight: var(--glass-highlight);
+
+  /* Radius ladder: 8 / 12 / 16 / 24 */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  /* Shadow ladder, 4 steps */
+  --shadow-e1: var(--elev-1);
+  --shadow-e2: var(--elev-2);
+  --shadow-e3: var(--elev-3);
+  --shadow-e4: var(--elev-4);
+  /* The hover/focus lift. Same geometry as e3 but the wide ambient layer is
+     tinted with the live accent instead of neutral grey, so a raised card looks
+     lit from the page's own palette rather than dropped on a grey sheet. It
+     cannot be expressed as `shadow-e3 shadow-primary/20`: Tailwind can only
+     recolour shadows it composes itself, and `--elev-*` arrive with their
+     colours already baked in. */
+  --shadow-lift: var(--elev-lift);
+
+  /* Type scale: 12 / 14 / 16 / 20 / 24 / 32 / 40 / 48 */
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1.5;
+  --text-xs: 0.875rem;
+  --text-xs--line-height: 1.6;
+  --text-base: 1rem;
+  --text-base--line-height: 1.7;
+  --text-lg: 1.25rem;
+  --text-lg--line-height: 1.5;
+  --text-xl: 1.5rem;
+  --text-xl--line-height: 1.4;
+  --text-2xl: 2rem;
+  --text-2xl--line-height: 1.25;
+  --text-3xl: 2.5rem;
+  --text-3xl--line-height: 1.15;
+  /* Display step. The ladder above tops out at 40px, which reads as a section
+     heading rather than as the one line a launcher opens with; the home page's
+     single <h1> is the only thing that uses this. Line-height goes below the
+     1.15 of the step under it because a two-line 48px headline at 1.15 opens a
+     visible gap between the lines. */
+  --text-4xl: 3rem;
+  --text-4xl--line-height: 1.08;
+
+  /* Density-aware spacing tokens. `inline` keeps the var reference live, so
+     switching [data-density] re-flows the whole grid with no JS.
+     Usage: `p-card`, `gap-grid`, `py-section`. */
+  --spacing-card: var(--d-card-pad);
+  --spacing-grid: var(--d-gap);
+  --spacing-section: var(--d-section);
+
+  --font-sans:
+    'Inter Variable', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', 'PingFang SC',
+    'Hiragino Sans GB', 'Microsoft YaHei', 'Noto Sans SC', sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', 'Cascadia Mono', 'Consolas', monospace;
+
+  --ease-glide: cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* --------------------------------------------------------------------------
+   Light theme — a first-class citizen, not an afterthought.
+   -------------------------------------------------------------------------- */
+:root {
+  color-scheme: light;
+
+  --background: oklch(0.976 0.004 270);
+  --foreground: oklch(0.215 0.021 275);
+
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.215 0.021 275);
+  --popover: oklch(0.995 0.002 270);
+  --popover-foreground: oklch(0.215 0.021 275);
+
+  --muted: oklch(0.945 0.006 270);
+  --muted-foreground: oklch(0.475 0.022 275);
+  --inset-bg: oklch(0 0 0 / 0.05);
+
+  /* Two different jobs, two different strengths:
+     `--border` is a decorative hairline between surfaces that already differ
+     in fill, so WCAG 1.4.11 does not apply to it. `--input` is the boundary of
+     a form control, where the border *is* the affordance, so it is measured to
+     clear 3:1 against both the pane outside it and its own fill inside
+     (3.21:1 and 3.15:1 in this theme). */
+  --border: oklch(0 0 0 / 0.07);
+  --input: oklch(0 0 0 / 0.44);
+
+  --swatch-indigo: oklch(0.52 0.2 272);
+  --swatch-violet: oklch(0.5 0.24 305);
+  --swatch-cyan: oklch(0.47 0.13 220);
+  --swatch-emerald: oklch(0.45 0.13 158);
+
+  --primary: oklch(0.52 0.2 272);
+  --primary-foreground: oklch(0.99 0.004 270);
+  --accent: oklch(0.93 0.025 272);
+  --accent-foreground: oklch(0.3 0.1 272);
+  --ring: oklch(0.52 0.2 272);
+
+  /* The brand tile's gradient. It follows the accent preset but NOT the theme:
+     these are declared here and never in `.dark`, so the logo is the same
+     object in both. That is deliberate — it used to be
+     `from-primary to-accent`, and `--accent` is a near-white tint in light mode
+     and a near-black one in dark, so the white glyph on top vanished into one
+     end of the gradient in light mode and the dark glyph vanished into the
+     other end in dark mode. Same lightness cap as the icon tiles (see the
+     `[data-tile]` block): a white glyph needs 3:1 against every stop. */
+  --brand-from: oklch(0.6 0.19 272);
+  --brand-to: oklch(0.48 0.2 288);
+
+  --destructive: oklch(0.52 0.2 25);
+  --destructive-foreground: oklch(0.99 0 0);
+  --success: oklch(0.47 0.13 156);
+  --success-foreground: oklch(0.99 0 0);
+  --warning: oklch(0.5 0.13 72);
+  --warning-foreground: oklch(0.99 0 0);
+
+  /* Glass surface — light mode leans on a near-opaque white so text never
+     sits on a gradient. Opacity stays high on purpose.
+
+     The hairline is the only lever pulled to sharpen the light-mode hierarchy.
+     At 6% the panel edge and the card edge both vanished into a near-white
+     page and the "panel carries the cards" reading fell apart; 9% brings both
+     edges back. The card *fill* was left alone deliberately: `--inset-bg` is
+     also what `--input` is measured against (3.15:1), and darkening the fill
+     would eat that margin to buy contrast the border can supply for free.
+
+     `--glass-ring` is the second half of the edge: a 1px inset ring just
+     inside the border, which is what gives a real pane of glass its thickness.
+     A single hairline reads as a drawn outline; a dark outer line plus a bright
+     inner one reads as a lit edge. It is inset rather than a second border so
+     it costs no layout, and it is a separate token from `--glass-highlight`
+     because the highlight is the top edge only.
+
+     Blur and saturation are both up from the first pass (20px / 1.35). At 32px
+     the background behind a panel becomes colour rather than recognisable
+     shapes, which is what stops the glow lobes from reading as smudges through
+     the glass, and 1.8 saturation puts back the chroma that heavy blurring
+     averages away. Light mode can carry more saturation than dark because it
+     is blurring a bright field, where the same multiplier shifts luminance far
+     less. */
+  --glass-bg: oklch(1 0 0 / 0.72);
+  --glass-border: oklch(0 0 0 / 0.09);
+  --glass-highlight: oklch(1 0 0 / 0.9);
+  --glass-ring: oklch(1 0 0 / 0.55);
+  --glass-blur: 32px;
+  --glass-saturate: 1.8;
+
+  /* Background glow lobes. Toned down from the first pass: at 0.18/0.15/0.16
+     the three lobes met in the middle of the page and read as a coloured haze
+     behind the panels rather than as light coming from somewhere. Pulling them
+     back leaves the aurora legible at the edges, and every measured contrast
+     ratio moves in the safe direction, since text is measured over the peak. */
+  --glow-1: oklch(0.62 0.22 268 / 0.14);
+  --glow-2: oklch(0.62 0.24 305 / 0.12);
+  --glow-3: oklch(0.74 0.14 205 / 0.12);
+  --noise-opacity: 0.035;
+
+  /* Elevation. Every step carries a tight contact shadow plus a wide, very soft
+     ambient one: the contact layer says the surface is off the page, the
+     ambient layer is what makes it read as glass over a lit background rather
+     than paper on paper. The wide layers are cheap because they are all
+     `-inset` heavy, so they never darken the area directly under the panel. */
+  --elev-1: 0 1px 2px -1px oklch(0.2 0.02 275 / 0.08), 0 1px 3px oklch(0.2 0.02 275 / 0.06);
+  --elev-2:
+    0 2px 4px -2px oklch(0.2 0.02 275 / 0.1), 0 4px 12px -2px oklch(0.2 0.02 275 / 0.08),
+    0 16px 40px -16px oklch(0.2 0.02 275 / 0.1);
+  --elev-3:
+    0 4px 8px -4px oklch(0.2 0.02 275 / 0.12), 0 12px 28px -6px oklch(0.2 0.02 275 / 0.1),
+    0 28px 60px -24px oklch(0.2 0.02 275 / 0.12);
+  --elev-4:
+    0 8px 16px -8px oklch(0.2 0.02 275 / 0.16), 0 28px 56px -12px oklch(0.2 0.02 275 / 0.14);
+
+  /* The accent-tinted ambient light used by the hover/focus lift. 26% keeps it
+     a tint: at full strength the accent stopped reading as light and started
+     reading as a coloured border sitting under the card. */
+  --lift-tint: color-mix(in oklab, var(--primary) 26%, transparent);
+  --elev-lift:
+    0 4px 8px -4px oklch(0.2 0.02 275 / 0.1), 0 14px 32px -10px var(--lift-tint),
+    0 28px 56px -24px var(--lift-tint);
+
+  /* Density: comfortable (default) */
+  --d-card-pad: 1.25rem;
+  --d-gap: 1rem;
+  --d-section: 2.5rem;
+  /* Sized for the sidebar-free layout: the page is one centred column capped at
+     `max-w-6xl` (1152px), and the only things between the viewport and the grid
+     are the page gutter and the carrying panel's own padding.
+
+     Grid width, measured: 320 -> 249px (`px-4` 32 + `p-3` 24, minus a ~15px
+     classic scrollbar) | 768 -> 673 (`px-6` 48 + `sm:p-4` 32) | 1024 -> 913
+     (`lg:p-6` 48) | >=1280 -> 1056 (container capped at 1152).
+
+     At 232px per column that lands on 1 / 2 / 3 / 4 columns, and each boundary
+     has real margin rather than sitting on it: 768 rejects a 3rd column at 728
+     against 673, 1024 rejects a 4th at 1008 against 913, and 1280+ rejects a
+     5th at 1224 against 1056. The `min(100%, ...)` in the grid template is what
+     keeps the 320px case at one column instead of overflowing. */
+  --d-card-min: 14.5rem;
+
+  --measure: 72ch;
+}
+
+/* --------------------------------------------------------------------------
+   Dark theme — deep-space base (#0A0A0F territory).
+   -------------------------------------------------------------------------- */
+.dark {
+  color-scheme: dark;
+
+  --background: oklch(0.145 0.012 275);
+  --foreground: oklch(0.985 0.002 270);
+
+  --card: oklch(0.195 0.014 275);
+  --card-foreground: oklch(0.985 0.002 270);
+  --popover: oklch(0.205 0.015 275);
+  --popover-foreground: oklch(0.985 0.002 270);
+
+  --muted: oklch(0.245 0.014 275);
+  --muted-foreground: oklch(0.75 0.015 272);
+  /* Darkens instead of lightening. A white tint would raise the pane's
+     luminance and drop muted text under 4.5:1 over the glow lobes. */
+  --inset-bg: oklch(0 0 0 / 0.24);
+
+  --border: oklch(1 0 0 / 0.1);
+  --input: oklch(1 0 0 / 0.38);
+
+  --swatch-indigo: oklch(0.7 0.16 272);
+  --swatch-violet: oklch(0.72 0.19 305);
+  --swatch-cyan: oklch(0.78 0.13 205);
+  --swatch-emerald: oklch(0.76 0.15 158);
+
+  --primary: oklch(0.7 0.16 272);
+  --primary-foreground: oklch(0.165 0.024 275);
+  --accent: oklch(0.3 0.05 272);
+  --accent-foreground: oklch(0.92 0.03 272);
+  --ring: oklch(0.7 0.16 272);
+
+  --destructive: oklch(0.74 0.18 25);
+  --destructive-foreground: oklch(0.16 0.02 25);
+  --success: oklch(0.8 0.15 156);
+  --success-foreground: oklch(0.16 0.02 156);
+  --warning: oklch(0.82 0.14 78);
+  --warning-foreground: oklch(0.16 0.02 78);
+
+  --glass-bg: oklch(1 0 0 / 0.06);
+  --glass-border: oklch(1 0 0 / 0.1);
+  --glass-highlight: oklch(1 0 0 / 0.14);
+  /* Much fainter than light mode's 55%. The ring is a specular edge, and on a
+     6%-white pane a bright inner line would read as a second border rather than
+     as thickness. */
+  --glass-ring: oklch(1 0 0 / 0.06);
+  --glass-blur: 30px;
+  /* Below light mode's 1.8: saturating a dark field also lifts its luminance,
+     and past ~1.4 the glow lobes started showing through the panels as colour
+     patches instead of as light. */
+  --glass-saturate: 1.3;
+
+  /* Cap is 0.35; these sit far below it. See the note in the light block: the
+     lobes exist to tint the corners of a deep-space page, not to fill it. */
+  --glow-1: oklch(0.56 0.22 268 / 0.21);
+  --glow-2: oklch(0.54 0.24 305 / 0.17);
+  --glow-3: oklch(0.64 0.14 205 / 0.15);
+  --noise-opacity: 0.045;
+
+  --elev-1: 0 1px 2px -1px oklch(0 0 0 / 0.5), 0 1px 3px oklch(0 0 0 / 0.35);
+  --elev-2:
+    0 2px 4px -2px oklch(0 0 0 / 0.55), 0 4px 12px -2px oklch(0 0 0 / 0.4),
+    0 16px 40px -16px oklch(0 0 0 / 0.5);
+  --elev-3:
+    0 4px 8px -4px oklch(0 0 0 / 0.6), 0 12px 28px -6px oklch(0 0 0 / 0.45),
+    0 28px 60px -24px oklch(0 0 0 / 0.55);
+  --elev-4: 0 8px 16px -8px oklch(0 0 0 / 0.65), 0 28px 56px -12px oklch(0 0 0 / 0.5);
+
+  /* Stronger than light mode's 26%: the tint has to be visible against a
+     near-black page, where a coloured shadow is the only way a raised surface
+     can look lit at all. */
+  --lift-tint: color-mix(in oklab, var(--primary) 34%, transparent);
+  --elev-lift:
+    0 4px 8px -4px oklch(0 0 0 / 0.6), 0 14px 32px -10px var(--lift-tint),
+    0 28px 56px -24px var(--lift-tint);
+}
+
+/* --------------------------------------------------------------------------
+   Accent presets — flip one attribute on <html>, the whole site follows.
+   -------------------------------------------------------------------------- */
+[data-accent='violet'] {
+  --primary: oklch(0.5 0.24 305);
+  --ring: oklch(0.5 0.24 305);
+  --accent: oklch(0.93 0.03 305);
+  --accent-foreground: oklch(0.3 0.12 305);
+  --brand-from: oklch(0.58 0.22 305);
+  --brand-to: oklch(0.47 0.21 322);
+  --glow-1: oklch(0.6 0.24 305 / 0.14);
+  --glow-2: oklch(0.6 0.22 270 / 0.12);
+  --glow-3: oklch(0.72 0.16 330 / 0.11);
+}
+
+.dark[data-accent='violet'] {
+  --primary: oklch(0.72 0.19 305);
+  --primary-foreground: oklch(0.165 0.03 305);
+  --ring: oklch(0.72 0.19 305);
+  --accent: oklch(0.3 0.06 305);
+  --accent-foreground: oklch(0.92 0.04 305);
+  --glow-1: oklch(0.54 0.25 305 / 0.21);
+  --glow-2: oklch(0.54 0.22 270 / 0.17);
+  --glow-3: oklch(0.62 0.17 330 / 0.15);
+}
+
+[data-accent='cyan'] {
+  --primary: oklch(0.47 0.13 220);
+  --ring: oklch(0.47 0.13 220);
+  --accent: oklch(0.93 0.03 220);
+  --accent-foreground: oklch(0.3 0.08 220);
+  --brand-from: oklch(0.6 0.13 214);
+  --brand-to: oklch(0.48 0.13 232);
+  --glow-1: oklch(0.7 0.15 205 / 0.14);
+  --glow-2: oklch(0.62 0.2 250 / 0.12);
+  --glow-3: oklch(0.75 0.14 175 / 0.11);
+}
+
+.dark[data-accent='cyan'] {
+  --primary: oklch(0.78 0.13 205);
+  --primary-foreground: oklch(0.165 0.03 205);
+  --ring: oklch(0.78 0.13 205);
+  --accent: oklch(0.3 0.05 205);
+  --accent-foreground: oklch(0.92 0.04 205);
+  --glow-1: oklch(0.6 0.15 205 / 0.21);
+  --glow-2: oklch(0.54 0.2 250 / 0.17);
+  --glow-3: oklch(0.64 0.14 175 / 0.15);
+}
+
+[data-accent='emerald'] {
+  --primary: oklch(0.45 0.13 158);
+  --ring: oklch(0.45 0.13 158);
+  --accent: oklch(0.93 0.03 158);
+  --accent-foreground: oklch(0.29 0.08 158);
+  --brand-from: oklch(0.58 0.14 158);
+  --brand-to: oklch(0.47 0.13 178);
+  --glow-1: oklch(0.68 0.15 158 / 0.14);
+  --glow-2: oklch(0.7 0.14 190 / 0.11);
+  --glow-3: oklch(0.75 0.15 120 / 0.1);
+}
+
+.dark[data-accent='emerald'] {
+  --primary: oklch(0.76 0.15 158);
+  --primary-foreground: oklch(0.165 0.03 158);
+  --ring: oklch(0.76 0.15 158);
+  --accent: oklch(0.3 0.05 158);
+  --accent-foreground: oklch(0.92 0.04 158);
+  --glow-1: oklch(0.6 0.16 158 / 0.21);
+  --glow-2: oklch(0.6 0.14 190 / 0.17);
+  --glow-3: oklch(0.64 0.16 120 / 0.15);
+}
+
+/* Density: compact */
+[data-density='compact'] {
+  --d-card-pad: 0.875rem;
+  --d-gap: 0.625rem;
+  --d-section: 1.75rem;
+  --d-card-min: 12rem;
+}
+
+/* --------------------------------------------------------------------------
+   Icon-tile gradients — one per entry in `accentNames` (types/tool.ts).
+   They live in the token layer so a card's colour never becomes a hard-coded
+   value inside a component.
+
+   Lightness is capped around oklch L 0.60 -> 0.48 on purpose: the glyph on top
+   is white, and a graphical object needs 3:1 (WCAG 1.4.11). At L 0.60 the ratio
+   against white is ~3.9:1, at L 0.48 ~6:1, so both ends keep margin. Anything
+   lighter than L 0.65 would fall under the floor.
+   -------------------------------------------------------------------------- */
+[data-tile='indigo'] {
+  --tile-from: oklch(0.6 0.19 272);
+  --tile-to: oklch(0.48 0.2 288);
+}
+
+[data-tile='violet'] {
+  --tile-from: oklch(0.58 0.22 305);
+  --tile-to: oklch(0.47 0.21 322);
+}
+
+[data-tile='cyan'] {
+  --tile-from: oklch(0.6 0.13 214);
+  --tile-to: oklch(0.48 0.13 232);
+}
+
+[data-tile='emerald'] {
+  --tile-from: oklch(0.58 0.14 158);
+  --tile-to: oklch(0.47 0.13 178);
+}
+
+[data-tile='amber'] {
+  --tile-from: oklch(0.6 0.14 68);
+  --tile-to: oklch(0.48 0.14 46);
+}
+
+[data-tile='rose'] {
+  --tile-from: oklch(0.58 0.19 12);
+  --tile-to: oklch(0.48 0.19 348);
+}
+
+@utility tile-gradient {
+  background-image: linear-gradient(135deg, var(--tile-from), var(--tile-to));
+  color: oklch(0.99 0 0);
+  /* Layer promotion, not decoration. Cards scale their tile to 1.05 on hover:
+     48px -> 50.4px, which puts the 24-unit glyph on fractional device pixels
+     and makes its 1.75-unit strokes shimmer between one and two pixels for the
+     whole 200ms. Promoting the tile means the browser scales an
+     already-rasterised texture on the GPU instead of redrawing the glyph on
+     every frame. Written as `transform` rather than `will-change` so it does not
+     collide with Tailwind v4's `scale-*`, which sets the standalone `scale`
+     property. */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Same contract as `tile-gradient`, but the gradient follows the accent preset
+   instead of the entry's own colour. See `--brand-from` for why the brand does
+   not use `from-primary to-accent`. */
+@utility brand-gradient {
+  background-image: linear-gradient(135deg, var(--brand-from), var(--brand-to));
+  color: oklch(0.99 0 0);
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* The card grid. Column count is derived from the density token rather than
+   hard-coded per breakpoint, so switching to compact reflows the whole grid
+   with no JS and no extra class permutations. Measured column counts at
+   comfortable density: 1 at 320-480px, 2 at 768px, 3 at 1024px, 4 from 1280px
+   up (the container stops growing at 1152px). See `--d-card-min` for the
+   arithmetic behind each of those boundaries. */
+@utility tool-grid {
+  display: grid;
+  gap: var(--d-gap);
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--d-card-min)), 1fr));
+}
+
+/* ==========================================================================
+   The single glass surface
+   --------------------------------------------------------------------------
+   This is the ONLY place in the codebase that declares `backdrop-filter`.
+   Keeping it here is what enforces the "never stack more than two blurred
+   layers in one visual region" performance rule: nesting is visible in the
+   markup instead of hidden across a dozen ad-hoc class lists.
+   ========================================================================== */
+@utility glass {
+  background-color: var(--glass-bg);
+  /* Unprefixed only, on purpose. Lightning CSS (Next's minifier) treats
+     `-webkit-backdrop-filter` as a prefix of this property and emits whatever
+     the build targets need — verified in `out/`, where Tailwind's own
+     `.backdrop-blur` ships both spellings. Authoring the `-webkit-` line by hand
+     made it collapse the pair and keep only that one, which left Firefox with a
+     6%-white panel and no blur at all. */
+  backdrop-filter: blur(var(--glass-blur)) saturate(var(--glass-saturate));
+  border: 1px solid var(--glass-border);
+  /* Three layers, in paint order: the top-edge highlight, then a full inset
+     ring one pixel inside the border, then elevation. The outer border and the
+     inner ring together are what make the edge read as the thickness of a pane
+     rather than as a drawn outline — the same trick as `inset 0 0 0 1px` in the
+     Apple-style material this was adapted from, kept as a shadow so it costs no
+     layout and no extra element. */
+  box-shadow:
+    inset 0 1px 0 0 var(--glass-highlight),
+    inset 0 0 0 1px var(--glass-ring),
+    var(--elev-2);
+}
+
+/* A nested pane that must sit *inside* an already-blurred surface. It adds no
+   second backdrop-filter, so the two-layer budget is never exceeded. It is also
+   the guaranteed backdrop for muted text: `--inset-bg` darkens in dark mode and
+   in light mode, so it always moves *away* from the text colour. */
+@utility glass-inset {
+  background-color: var(--inset-bg);
+  border: 1px solid var(--glass-border);
+}
+
+/* An accent halo behind a control, for hover and keyboard focus.
+   Adapted from the reference's `.search-glow`, with three departures:
+
+   - No infinite gradient animation. A permanently animating composited layer
+     inside a sticky header costs frames for the entire session, and the motion
+     budget only allows 150-250ms state changes.
+   - Opacity is the only animated property.
+   - `filter: blur()` on a pseudo-element is not a `backdrop-filter` — it blurs
+     the element's own paint, not what is behind it — so this does not spend any
+     of the two-blurred-layers-per-region budget.
+
+   The gradient is built from `--primary` with `color-mix`, so it follows the
+   accent preset and both themes without a token per combination.
+
+   `z-index: -1` and deliberately NO `isolation: isolate`. The painting order is
+   the whole trick: inside a stacking context the context's own background paints
+   first, then negative-level descendants, and only then non-positioned
+   descendants. Isolating the host would therefore put the glow *on top of* the
+   host's own fill — a blurred blob over the control. Without isolation the glow
+   joins the nearest ancestor stacking context (the sticky header, which has a
+   z-index) and lands where it belongs: over the header's fill, under the
+   control's. It stays visible even with no such ancestor, for the same reason
+   the fixed glow layer does — the page colour is painted on the root element,
+   which goes to the canvas below negative-z children.
+
+   Deliberately in `@layer components` rather than as an `@utility`: the
+   `prefers-reduced-motion` block at the end of this file is unlayered, and
+   unlayered rules beat layered ones whatever their specificity. Written as a
+   utility it would have outranked that clamp and kept its own 200ms. */
+@layer components {
+  .halo {
+    position: relative;
+  }
+
+  .halo::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    border-radius: inherit;
+    background-image: linear-gradient(
+      120deg,
+      color-mix(in oklab, var(--primary) 80%, oklch(1 0 0)),
+      var(--primary),
+      color-mix(in oklab, var(--primary) 55%, var(--foreground))
+    );
+    filter: blur(10px);
+    opacity: 0;
+    transition: opacity 200ms var(--ease-glide);
+  }
+
+  .halo:hover::after {
+    opacity: 0.4;
+  }
+
+  /* `focus-within` rather than `focus-visible`: the halo marks the control the
+     keyboard is on, and it has to survive a focused child. It is stronger than
+     the hover state because focus is the one that has to be findable. */
+  .halo:focus-within::after {
+    opacity: 0.7;
+  }
+
+  /* Dark mode needs less of it: the same opacity over a near-black page reads
+     as a lamp rather than as a rim of light. */
+  .dark .halo::after {
+    filter: blur(12px);
+  }
+
+  .dark .halo:hover::after {
+    opacity: 0.3;
+  }
+
+  .dark .halo:focus-within::after {
+    opacity: 0.55;
+  }
+}
+
+@utility measure {
+  max-width: var(--measure);
+}
+
+/* Every digit the same width, so counts and metrics never jitter. */
+@utility tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+@utility safe-x {
+  padding-left: max(env(safe-area-inset-left), 0px);
+  padding-right: max(env(safe-area-inset-right), 0px);
+}
+
+@utility safe-b {
+  padding-bottom: max(env(safe-area-inset-bottom), 0px);
+}
+
+/* ==========================================================================
+   Base layer
+   ========================================================================== */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+    /* Keep the sticky header from covering anchor targets. */
+    scroll-padding-top: 5rem;
+    /* The page colour lives on the root element on purpose: a root background
+       is painted to the canvas *below* negative z-index children, which is
+       what lets the fixed glow layer sit behind content but stay visible. */
+    background-color: var(--background);
+  }
+
+  body {
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  /* Typography tuning per script. Chinese runs slightly lighter with no extra
+     letter-spacing; Latin headings get tightened. */
+  :lang(zh) {
+    font-weight: 380;
+    letter-spacing: 0;
+  }
+
+  :lang(zh) h1,
+  :lang(zh) h2,
+  :lang(zh) h3 {
+    font-weight: 560;
+    letter-spacing: 0;
+  }
+
+  :lang(en) h1,
+  :lang(en) h2,
+  :lang(en) h3 {
+    letter-spacing: -0.02em;
+    font-weight: 620;
+  }
+
+  p,
+  li {
+    line-height: 1.7;
+  }
+
+  /* Icon anti-jitter, adapted from the reference's fixed-width glyph box — but
+     the failure it prevents here is a different one. A lucide icon is an <svg>
+     with explicit width and height, so inside a flex row it is a flex item like
+     any other and the default `flex-shrink: 1` lets a long label squeeze it. A
+     squeezed icon is drawn at a fractional width: it slides off the centre line
+     of the row *and* its strokes thin out, so the same glyph reads a shade
+     lighter than its twin elsewhere on the page. That is both halves of the
+     complaint — misalignment and colour deviation — from one root cause.
+
+     Declaring it once in the base layer means a forgotten `shrink-0` in a
+     component can no longer reintroduce it; the per-component `shrink-0` classes
+     stay as documentation of intent. `lucide` is the class every lucide-react
+     icon carries, so nothing else on the page is affected.
+
+     `vertical-align` is inert for a flex child and every icon today is one; it
+     is here so an icon dropped into a run of text later lines up on the x-height
+     instead of the baseline, which is the same misalignment by another route. */
+  svg.lucide {
+    flex: none;
+    vertical-align: middle;
+  }
+
+  /* Never let a focusable element go without a visible ring. Components add
+     their own offsets on top of this floor. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+
+  ::selection {
+    background-color: color-mix(in oklab, var(--primary) 30%, transparent);
+    color: var(--foreground);
+  }
+
+  ::placeholder {
+    color: var(--muted-foreground);
+    opacity: 1;
+  }
+
+  /* WebKit draws its own clear button inside a search field. The site supplies
+     a labelled one, and two of them side by side is just confusing. */
+  input[type='search']::-webkit-search-decoration,
+  input[type='search']::-webkit-search-cancel-button,
+  input[type='search']::-webkit-search-results-button {
+    -webkit-appearance: none;
+    appearance: none;
+  }
+
+  /* Scrollbars that read on both themes without going invisible. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--foreground) 25%, transparent) transparent;
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--foreground) 22%, transparent);
+    border-radius: 999px;
+    border: 3px solid transparent;
+    background-clip: content-box;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(in oklab, var(--foreground) 34%, transparent);
+  }
+}
+
+/* ==========================================================================
+   Background layers
+   --------------------------------------------------------------------------
+   Pure CSS radial gradients — no raster background images anywhere. Both
+   layers are `fixed`, so they never jitter while the page scrolls.
+   ========================================================================== */
+@layer components {
+  .glow-layer {
+    position: fixed;
+    inset: 0;
+    z-index: -20;
+    overflow: hidden;
+    pointer-events: none;
+    contain: strict;
+  }
+
+  .glow-lobe {
+    position: absolute;
+    border-radius: 50%;
+    transform: translate3d(0, 0, 0);
+  }
+
+  .glow-lobe--a {
+    inline-size: clamp(22rem, 58vw, 48rem);
+    block-size: clamp(22rem, 58vw, 48rem);
+    inset-block-start: -14vh;
+    inset-inline-start: -12vw;
+    background: radial-gradient(circle at 50% 50%, var(--glow-1), transparent 68%);
+    filter: blur(96px);
+    animation: glow-drift-a 28s var(--ease-glide) infinite alternate;
+  }
+
+  .glow-lobe--b {
+    inline-size: clamp(20rem, 50vw, 42rem);
+    block-size: clamp(20rem, 50vw, 42rem);
+    inset-block-start: 8vh;
+    inset-inline-end: -14vw;
+    background: radial-gradient(circle at 50% 50%, var(--glow-2), transparent 70%);
+    filter: blur(112px);
+    animation: glow-drift-b 34s var(--ease-glide) infinite alternate;
+  }
+
+  .glow-lobe--c {
+    inline-size: clamp(18rem, 44vw, 36rem);
+    block-size: clamp(18rem, 44vw, 36rem);
+    inset-block-end: -18vh;
+    inset-inline-start: 22vw;
+    background: radial-gradient(circle at 50% 50%, var(--glow-3), transparent 72%);
+    filter: blur(88px);
+    animation: glow-drift-c 40s var(--ease-glide) infinite alternate;
+  }
+
+  /* SVG feTurbulence grain, inlined as a data URI so it costs no extra
+     request. It exists to break up the banding a wide radial gradient
+     produces on 8-bit displays. */
+  .noise-layer {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    opacity: var(--noise-opacity);
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+    background-repeat: repeat;
+  }
+
+  /* A headline that fades from the text colour into the active accent.
+     `background-clip: text` needs a real fallback, so the solid colour is
+     declared first and only replaced where the property is supported; in forced
+     colours the system colour wins back, because a transparent fill there means
+     an invisible headline.
+
+     Both ends of the ramp were checked against the glass surface in both
+     themes: the accent end is the weaker one and lands at 3.9:1 (light) and
+     6.5:1 (dark) against a 3:1 requirement for text this size. */
+  .text-gradient {
+    color: var(--foreground);
+  }
+
+  @supports ((background-clip: text) or (-webkit-background-clip: text)) {
+    .text-gradient {
+      background-image: linear-gradient(
+        102deg,
+        var(--foreground) 6%,
+        color-mix(in oklab, var(--primary) 92%, var(--foreground)) 58%,
+        var(--foreground) 100%
+      );
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+  }
+
+  @media (forced-colors: active) {
+    .text-gradient {
+      background-image: none;
+      color: CanvasText;
+    }
+  }
+
+  /* A one-pixel gradient rim across the top edge of a carrying panel: the
+     "light catches the edge" cue that separates glass from a flat tint. Purely
+     decorative — it never sits under text, so it spends nothing from the
+     contrast budget, and it is inset from the corners so it does not fight the
+     24px radius. */
+  .slab-edge {
+    position: absolute;
+    inset-block-start: 0;
+    inset-inline: 10%;
+    block-size: 1px;
+    pointer-events: none;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--primary) 55%, transparent) 35%,
+      var(--glass-highlight) 50%,
+      color-mix(in oklab, var(--primary) 55%, transparent) 65%,
+      transparent
+    );
+  }
+
+  /* ------------------------------------------------------------------------
+     The header bar's glass
+     ------------------------------------------------------------------------
+     The one surface on the site with live content sliding underneath it, so it
+     is the only one that can afford to be genuinely thin: the panels have to
+     keep body text legible *on top of themselves*, this bar only has to keep
+     four controls legible. That is why the glass tokens are retuned here
+     instead of globally — a wider lens (44px against 32px) and more chroma
+     recovery, over a fill at 46% rather than 72%.
+
+     It stays exactly one blurred layer. Everything below is a fill, a gradient
+     or a shadow; none of it is a second `backdrop-filter`. */
+  .liquid-bar {
+    position: relative;
+    --glass-blur: 44px;
+    --glass-saturate: 2.1;
+    --glass-bg: oklch(1 0 0 / 0.46);
+    /* The scroll-reactive second fill. Light mode adds white, because what
+       arrives under the bar is a bright page and the controls on it are dark. */
+    --bar-tint: oklch(1 0 0 / 0.3);
+  }
+
+  .dark .liquid-bar {
+    --glass-blur: 40px;
+    --glass-saturate: 1.6;
+    --glass-bg: oklch(1 0 0 / 0.04);
+    /* Dark mode tints the other way for the same reason: the text is light, so
+       the bar has to be able to darken whatever slides behind it. */
+    --bar-tint: oklch(0.14 0.015 275 / 0.55);
+  }
+
+  /* The specular film: a sheen along the top edge plus one accent-tinted bloom
+     rising from just above the bar, which is what makes the surface look lit
+     from outside rather than filled with a flat tint.
+
+     `z-index: -2` is load-bearing. Inside the header's stacking context the
+     paint order is: the bar's own fill, then negative-level children in
+     ascending order, then the controls. So this lands over the fill, under the
+     search field's `.halo` at -1, and under every control. */
+  .liquid-bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: inherit;
+    pointer-events: none;
+    opacity: 0.6;
+    background-image:
+      linear-gradient(180deg, var(--glass-highlight), oklch(1 0 0 / 0) 46%),
+      radial-gradient(
+        150% 220% at 50% -70%,
+        color-mix(in oklab, var(--primary) 20%, transparent),
+        transparent 66%
+      );
+  }
+
+  /* The bottom rim, gradient rather than flat: light gathers in the middle of
+     the edge and dies at the corners, which reads as a lit bevel where a
+     uniform hairline reads as a drawn outline. One pixel inside the border, on
+     top of `--glass-ring`'s even lip. Decorative only — no text goes near it. */
+  .liquid-bar::after {
+    content: '';
+    position: absolute;
+    inset-inline: 12%;
+    inset-block-end: 1px;
+    block-size: 1px;
+    z-index: -2;
+    pointer-events: none;
+    background-image: linear-gradient(
+      90deg,
+      transparent,
+      color-mix(in oklab, var(--primary) 45%, transparent) 28%,
+      var(--glass-highlight) 50%,
+      color-mix(in oklab, var(--primary) 45%, transparent) 72%,
+      transparent
+    );
+  }
+
+  /* The scroll-reactive fill, as a real element because both pseudo-elements
+     are already spent. Fully opaque by default, which is the deliberate part:
+     with no scroll-timeline support, or with reduced motion, the bar simply
+     stays in its legible state and nothing animates. Where the timeline exists
+     it fades in over the first 120px of scroll, so the bar is at its thinnest
+     exactly when there is nothing behind it but the page's own background, and
+     gains body — plus a contact shadow — as content arrives underneath. */
+  .bar-tint {
+    position: absolute;
+    inset: 0;
+    z-index: -3;
+    border-radius: inherit;
+    pointer-events: none;
+    background-color: var(--bar-tint);
+    box-shadow: 0 14px 34px -22px oklch(0.2 0.02 275 / 0.55);
+  }
+
+  /* The appearance disclosure. A native <details>, so it opens with no client
+     JavaScript at all; this only gives the panel the same arrival motion a card
+     gets, which is what keeps the header from feeling like a different piece of
+     software than the page. */
+  details[data-menu][open] > [data-menu-panel] {
+    animation: rise-in 180ms var(--ease-glide) both;
+  }
+
+  /* Card hover "shimmer": a 1px gradient stroke drawn by masking a gradient
+     down to the border box. It is a real element rather than a pseudo-element
+     so the fade is a plain Tailwind opacity transition (transform/opacity only)
+     and needs no arbitrary variant.
+
+     Default is `display: none`: without mask compositing the gradient would
+     flood the whole card, so unsupported browsers get no shimmer at all rather
+     than a broken one. */
+  .card-shimmer {
+    display: none;
+  }
+
+  @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
+    .card-shimmer {
+      display: block;
+      border-radius: inherit;
+      padding: 1px;
+      background: linear-gradient(
+        120deg,
+        transparent 18%,
+        var(--glass-highlight) 42%,
+        color-mix(in oklab, var(--primary) 60%, transparent) 54%,
+        transparent 82%
+      );
+      -webkit-mask:
+        linear-gradient(#000, #000) content-box,
+        linear-gradient(#000, #000);
+      -webkit-mask-composite: xor;
+      mask:
+        linear-gradient(#000, #000) content-box,
+        linear-gradient(#000, #000);
+      mask-composite: exclude;
+    }
+  }
+
+  /* A specular highlight that sweeps across a card on hover — the "glass
+     catches the light" half of the hover state, where `.card-shimmer` is the
+     "glass has an edge" half.
+
+     Driven from the card's own `[data-card]` wrapper rather than a Tailwind
+     `group-hover:` variant so the whole effect is one declaration block: the
+     travel is a single `transform`, which keeps it on the compositor. Tinted
+     with `--primary`, so it follows whichever accent preset is active. */
+  .card-sheen {
+    position: absolute;
+    inset-block: -40%;
+    inset-inline-start: -40%;
+    inline-size: 24%;
+    border-radius: 999px;
+    pointer-events: none;
+    opacity: 0;
+    background: linear-gradient(
+      100deg,
+      transparent,
+      color-mix(in oklab, var(--primary) 20%, transparent),
+      transparent
+    );
+    transform: rotate(10deg) translate3d(0, 0, 0);
+    transition:
+      transform 240ms var(--ease-glide),
+      opacity 240ms var(--ease-glide);
+  }
+
+  [data-card]:hover .card-sheen,
+  [data-card]:focus-within .card-sheen {
+    opacity: 1;
+    transform: rotate(10deg) translate3d(700%, 0, 0);
+  }
+
+  /* Card entrance. The delay is set inline, per card, so a grid resolves as a
+     short cascade instead of twelve cards popping in at once. `both` holds the
+     first frame, which is why the cascade reads as intentional rather than as
+     a flash of unstyled content. */
+  .rise-in {
+    animation: rise-in 240ms var(--ease-glide) both;
+  }
+
+  /* Hero open/collapsed states.
+     CSS owns the switch, not React: `data-hero` is set by the pre-paint script
+     from localStorage, so a visitor who dismissed the panel never sees it flash
+     in before hydration. Both states are always in the markup, and exactly one
+     is displayed — which also keeps the page at exactly one visible <h1>. */
+  [data-hero-restore] {
+    display: none;
+  }
+
+  [data-hero='dismissed'] [data-hero-panel] {
+    display: none;
+  }
+
+  [data-hero='dismissed'] [data-hero-restore] {
+    display: flex;
+  }
+}
+
+/* Only transform and opacity animate — never layout properties. */
+@keyframes glow-drift-a {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(4vw, 5vh, 0) scale(1.08);
+  }
+}
+
+@keyframes glow-drift-b {
+  from {
+    transform: translate3d(0, 0, 0) scale(1.05);
+  }
+  to {
+    transform: translate3d(-5vw, 4vh, 0) scale(1);
+  }
+}
+
+@keyframes glow-drift-c {
+  from {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  to {
+    transform: translate3d(3vw, -4vh, 0) scale(1.12);
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 10px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes panel-reveal {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 14px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+/* Scroll-driven reveal for the carrying panels, as pure progressive
+   enhancement: no timeline support means no animation and a fully visible
+   page, and no JavaScript is involved either way.
+
+   `animation-duration` is deliberately left at its initial `auto`, which for a
+   progress-based timeline means "the whole range" — writing a time here would
+   pin the animation to the clock and defeat the timeline.
+
+   A panel that is already on screen at load sits at 100% of its entry range,
+   so it renders in its end state; only panels below the fold animate. The
+   whole block is gated on `no-preference`, because a scroll-linked animation
+   ignores the `animation-duration: 1ms` clamp further down. */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    [data-section-panel] {
+      animation-name: panel-reveal;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: view();
+      animation-range: entry 8% entry 52%;
+    }
+  }
+}
+
+@keyframes bar-thicken {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* The header's scroll reaction, same progressive-enhancement contract as the
+   panel reveal above: no timeline support means no animation and a bar that
+   stays at full tint, and no JavaScript is involved either way. Opacity is the
+   only property that moves, so it never leaves the compositor, and a
+   scroll-linked animation ignores the reduced-motion duration clamp further
+   down — hence the explicit `no-preference` gate. */
+@supports (animation-timeline: scroll()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .bar-tint {
+      animation-name: bar-thicken;
+      animation-timing-function: linear;
+      animation-fill-mode: both;
+      animation-timeline: scroll(root block);
+      animation-range: 0 120px;
+    }
+  }
+}
+
+/* ==========================================================================
+   Accessibility preferences
+   --------------------------------------------------------------------------
+   These blocks come last so they win on source order without ever needing
+   `!important`.
+   ========================================================================== */
+
+/* Readability outranks the visual effect: when the user asks for less
+   transparency, the glass becomes an opaque panel and the blur is dropped
+   entirely. */
+@media (prefers-reduced-transparency: reduce) {
+  :root {
+    --glass-bg: var(--card);
+    --glass-border: var(--border);
+    --glass-highlight: transparent;
+    /* The ring is specular — it only means anything on a translucent edge. On an
+       opaque panel it would just be a second border one pixel inside the first. */
+    --glass-ring: transparent;
+    --glass-blur: 0px;
+    --glow-1: transparent;
+    --glow-2: transparent;
+    --glow-3: transparent;
+    --noise-opacity: 0;
+  }
+
+  .dark {
+    --glass-bg: var(--card);
+    --glass-border: var(--border);
+    --glass-highlight: transparent;
+    --glass-ring: transparent;
+    --glass-blur: 0px;
+    --glow-1: transparent;
+    --glow-2: transparent;
+    --glow-3: transparent;
+    --noise-opacity: 0;
+  }
+
+  /* Unprefixed only — see the note on `@utility glass`. The tokens above already
+     set `--glass-blur: 0px`, so this is belt-and-braces for the saturate half. */
+  .glass,
+  .glass-inset {
+    backdrop-filter: none;
+  }
+
+  /* The header retunes the same tokens on its own element, and an element-level
+     custom property beats an inherited one whatever the layer — so the blocks
+     above cannot reach it and it has to be reset by name. Its extra fill and
+     both decorative gradients go with it: they are the transparency this
+     preference is asking to be spared. */
+  .liquid-bar {
+    --glass-bg: var(--card);
+    --glass-blur: 0px;
+    --glass-saturate: 1;
+  }
+
+  .liquid-bar::before,
+  .liquid-bar::after,
+  .bar-tint {
+    display: none;
+  }
+
+  /* Same reasoning as the glow lobes: the halo is a coloured blur bleeding out
+     from under a control, which is exactly the effect this preference asks to
+     be spared. The focus ring is unaffected and remains the focus indicator. */
+  .halo::after {
+    display: none;
+  }
+
+  .glow-layer,
+  .noise-layer {
+    display: none;
+  }
+}
+
+/* Same fallback for browsers that cannot composite a backdrop filter at all. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background-color: var(--card);
+  }
+}
+
+/* No displacement, no drifting glow. Opacity-only transitions, capped at
+   100ms, so state changes stay legible without motion. */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  /* This rule is unlayered while `.glow-lobe--*` lives in `@layer components`,
+     and unlayered styles outrank layered ones — no `!important` needed. */
+  .glow-lobe {
+    animation: none;
+  }
+
+  /* The sheen is nothing but travel: with transforms suppressed it would park a
+     bright bar on the card's left edge, so it is removed rather than frozen. */
+  .card-sheen {
+    display: none;
+  }
+
+  *,
+  *::before,
+  *::after {
+    transition-property: opacity;
+    transition-duration: 100ms;
+    animation-duration: 1ms;
+    /* Zeroed alongside the duration: the card cascade sets a per-card delay
+       inline, and a 1ms animation behind a 300ms delay is just a blank card. */
+    animation-delay: 0ms;
+    animation-iteration-count: 1;
+  }
+}

@@ -1,0 +1,6 @@
+allowBuilds:
+  # unrs-resolver ships prebuilt platform binaries as optional dependencies;
+  # its install script is only a source-build fallback we do not need.
+  unrs-resolver: false
+minimumReleaseAgeExclude:
+  - lucide-react@1.38.0

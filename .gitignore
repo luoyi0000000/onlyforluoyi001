@@ -1,0 +1,39 @@
+# dependencies
+node_modules/
+.pnpm-store/
+
+# next.js
+.next/
+out/
+next-env.d.ts
+
+# typescript incremental cache — written by `pnpm run typecheck`
+tsconfig.tsbuildinfo
+
+# production / deploy
+.wrangler/
+.vercel/
+
+# misc
+.DS_Store
+Thumbs.db
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.eslintcache
+
+# local env files — never commit secrets
+.env
+.env.*
+!.env.example
+
+# editor / agent scratch
+.idea/
+.vscode/*
+!.vscode/extensions.json
+.zcode/
+
+# scratch
+tmp/
+.tmp/

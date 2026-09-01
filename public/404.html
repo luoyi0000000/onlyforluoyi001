@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="zh-Hans">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="color-scheme" content="dark light" />
+    <meta name="robots" content="noindex" />
+    <title>404 · 工具箱 / Toolbox</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <!--
+      Deliberately self-contained. A static export only emits `out/404.html` from a
+      root-level `app/not-found.tsx`, which cannot exist in this project because the
+      root layout lives inside `app/[locale]/` so that `<html lang>` is correct per
+      language. Cloudflare's `not_found_handling: "404-page"` needs a real file at
+      `/404.html`, so this one is hand-written: no bundle, no hydration, no font
+      dependency beyond the site's own self-hosted woff2, and no external request of
+      any kind. It has to keep working even if the app bundle is broken.
+    -->
+    <style>
+      @font-face {
+        font-family: 'Inter Variable';
+        font-style: normal;
+        font-weight: 100 900;
+        font-display: swap;
+        src: url('/fonts/inter-latin-variable.woff2') format('woff2-variations');
+      }
+
+      :root {
+        color-scheme: dark light;
+        --bg: #0a0a0f;
+        --fg: #f2f3f8;
+        --muted: #b3b6c4;
+        --panel: rgb(255 255 255 / 0.06);
+        --panel-border: rgb(255 255 255 / 0.12);
+        --pill: rgb(0 0 0 / 0.24);
+        --accent-a: #6366f1;
+        --accent-b: #22d3ee;
+        --glow-1: rgb(99 102 241 / 0.26);
+        --glow-2: rgb(167 79 236 / 0.22);
+        --glow-3: rgb(56 189 248 / 0.2);
+      }
+
+      @media (prefers-color-scheme: light) {
+        :root {
+          --bg: #f6f7fa;
+          --fg: #16171f;
+          --muted: #5b5f70;
+          --panel: rgb(255 255 255 / 0.62);
+          --panel-border: rgb(0 0 0 / 0.08);
+          --pill: rgb(0 0 0 / 0.05);
+          --accent-a: #4f46c8;
+          --accent-b: #0e7490;
+          --glow-1: rgb(99 102 241 / 0.16);
+          --glow-2: rgb(167 79 236 / 0.14);
+          --glow-3: rgb(56 189 248 / 0.12);
+        }
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html {
+        background-color: var(--bg);
+      }
+
+      body {
+        margin: 0;
+        min-height: 100dvh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: calc(2rem + env(safe-area-inset-top)) calc(1rem + env(safe-area-inset-right))
+          calc(2rem + env(safe-area-inset-bottom)) calc(1rem + env(safe-area-inset-left));
+        color: var(--fg);
+        font-family:
+          'Inter Variable',
+          system-ui,
+          -apple-system,
+          'Segoe UI',
+          'Microsoft YaHei',
+          'PingFang SC',
+          'Noto Sans SC',
+          sans-serif;
+        font-size: 16px;
+        line-height: 1.7;
+        -webkit-font-smoothing: antialiased;
+      }
+
+      /* Same three-lobe recipe as the app, written literally so this file has no
+         dependency on the generated stylesheet. */
+      .glow {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        overflow: hidden;
+        pointer-events: none;
+      }
+
+      .glow span {
+        position: absolute;
+        display: block;
+        border-radius: 50%;
+        filter: blur(100px);
+      }
+
+      .glow span:nth-child(1) {
+        top: -14%;
+        left: -8%;
+        width: 62vmax;
+        height: 62vmax;
+        background: radial-gradient(circle, var(--glow-1) 0%, transparent 70%);
+      }
+
+      .glow span:nth-child(2) {
+        top: 26%;
+        right: -14%;
+        width: 54vmax;
+        height: 54vmax;
+        background: radial-gradient(circle, var(--glow-2) 0%, transparent 70%);
+      }
+
+      .glow span:nth-child(3) {
+        bottom: -20%;
+        left: 22%;
+        width: 48vmax;
+        height: 48vmax;
+        background: radial-gradient(circle, var(--glow-3) 0%, transparent 70%);
+      }
+
+      main {
+        width: 100%;
+        max-width: 32rem;
+      }
+
+      .code {
+        margin: 0 0 1.25rem;
+        text-align: center;
+        font-size: 3.5rem;
+        font-weight: 640;
+        line-height: 1.1;
+        font-variant-numeric: tabular-nums;
+        background-image: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+
+      .panel {
+        border: 1px solid var(--panel-border);
+        border-radius: 16px;
+        background-color: var(--panel);
+        backdrop-filter: blur(16px) saturate(160%);
+        padding: 1.5rem;
+      }
+
+      .panel + .panel {
+        margin-top: 0.75rem;
+      }
+
+      h1,
+      h2 {
+        margin: 0 0 0.5rem;
+        font-size: 1.25rem;
+        font-weight: 600;
+        line-height: 1.4;
+      }
+
+      p {
+        margin: 0 0 1rem;
+        max-width: 60ch;
+        font-size: 0.875rem;
+        color: var(--muted);
+      }
+
+      .links {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      a {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 44px;
+        padding: 0 1rem;
+        border: 1px solid var(--panel-border);
+        border-radius: 8px;
+        background-color: var(--pill);
+        color: var(--fg);
+        font-size: 0.875rem;
+        font-weight: 500;
+        text-decoration: none;
+        transition:
+          opacity 150ms cubic-bezier(0.2, 0.8, 0.2, 1),
+          transform 150ms cubic-bezier(0.2, 0.8, 0.2, 1);
+      }
+
+      a:hover {
+        opacity: 0.85;
+      }
+
+      a:active {
+        transform: scale(0.98);
+      }
+
+      a:focus-visible {
+        outline: 2px solid var(--accent-a);
+        outline-offset: 2px;
+      }
+
+      a.primary {
+        border-color: transparent;
+        background-image: linear-gradient(135deg, var(--accent-a), var(--accent-b));
+        color: #fff;
+      }
+
+      @media (prefers-reduced-transparency: reduce) {
+        .glow {
+          display: none;
+        }
+
+        .panel {
+          backdrop-filter: none;
+          background-color: color-mix(in oklab, var(--bg) 88%, var(--fg));
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        a {
+          transition-duration: 100ms;
+          transition-property: opacity;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="glow" aria-hidden="true"><span></span><span></span><span></span></div>
+
+    <main>
+      <p class="code" aria-hidden="true">404</p>
+
+      <section class="panel" lang="zh-Hans">
+        <h1>这里没有页面</h1>
+        <p>链接可能已经失效，或者地址打错了一个字符。</p>
+        <div class="links">
+          <a class="primary" href="/zh/">返回首页</a>
+          <a href="/zh/about/">关于本站</a>
+        </div>
+      </section>
+
+      <section class="panel" lang="en">
+        <h2>Nothing lives here</h2>
+        <p>The link may have expired, or the address is off by a character.</p>
+        <div class="links">
+          <a class="primary" href="/en/">Back to home</a>
+          <a href="/en/about/">About</a>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
