@@ -64,7 +64,7 @@ export async function generateMetadata({
     title: { default: dict.meta.title, template: dict.meta.titleTemplate },
     description: dict.meta.description,
     applicationName: pick(siteConfig.name, locale),
-    icons: [{ url: '/icon.svg', type: 'image/svg+xml' }],
+    icons: [{ url: '/images/p1.png', type: 'image/png' }],
     alternates: {
       canonical: `/${locale}/`,
       languages: Object.fromEntries(

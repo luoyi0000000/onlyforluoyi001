@@ -33,6 +33,8 @@ export interface ToolItem {
   categoryId: string
   /** lucide icon name, resolved through `lib/icons.ts` with a safe fallback. */
   icon: string
+  /** Optional same-origin image used instead of the default lucide icon tile. */
+  iconSrc?: string
   kind: ToolKind
   /** Required when `kind === 'link'`. */
   href?: string

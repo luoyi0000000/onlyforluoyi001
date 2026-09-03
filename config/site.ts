@@ -78,14 +78,14 @@ export const siteConfig: SiteConfig = {
   name: { zh: '工具箱', en: 'Toolbox' },
 
   brand: {
-    logoSrc: null,
+    logoSrc: '/images/p2.png',
     logoAlt: { zh: '工具箱标志', en: 'Toolbox logo' },
   },
 
   background: {
     imageSrc: '/images/toolbox-background.png',
-    position: 'center center',
-    mobilePosition: '66% center',
+    position: 'center 42%',
+    mobilePosition: '66% 42%',
   },
 
   slogan: {

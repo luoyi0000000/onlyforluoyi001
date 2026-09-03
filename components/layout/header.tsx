@@ -2,7 +2,6 @@ import { AppearanceMenu } from '@/components/layout/appearance-menu'
 import { Brand } from '@/components/layout/brand'
 import { LocaleToggle } from '@/components/locale-toggle'
 import { SearchTrigger } from '@/components/search-trigger'
-import { ThemeSwitch } from '@/components/theme-switch'
 import { siteConfig } from '@/config/site'
 import { createTranslator } from '@/lib/i18n'
 import { localePath } from '@/lib/utils'
@@ -21,22 +20,18 @@ import { localeMeta, type Locale } from '@/types/i18n'
  * holds the material (see `globals.css`) and `.bar-tint` is the fill that fades
  * in as the page scrolls under it.
  *
- * Four things live here — who this is, how to search it, light or dark, what
- * language it is in. Light/dark earns its place in the bar because it is the
- * preference people actually change, and often: it used to be reachable only by
- * opening the appearance disclosure first, which made the site look like it had
- * no light mode at all. Everything else about appearance — following the system,
- * the accent, the density — stays behind `AppearanceMenu`, because a bar
- * carrying four separate switch clusters stopped looking like a header and
- * started looking like a preferences dialog stuck to the top of the page.
+ * Four things live here — who this is, how to search it, where appearance is
+ * configured, and what language it is in. The appearance disclosure keeps the
+ * theme, accent and density controls together, so the bar stays a compact header
+ * rather than becoming a preferences dialog stuck to the top of the page.
  *
  * Labels are resolved here and handed down as plain strings. A `t()` function
  * cannot cross into a client component — React has no way to serialize it — so
  * translation always happens on the server side of the boundary.
  *
- * `flex-wrap` stays as the safety net: at 320px the cluster is wider than the
- * viewport once the theme switch is in it, and wrapping to a second line is the
- * correct failure mode. Nothing is ever hidden.
+ * `flex-wrap` stays as the safety net: at 320px the cluster can still be wider
+ * than the viewport, and wrapping to a second line is the correct failure mode.
+ * Nothing is ever hidden.
  *
  * Blur budget: this bar is one blurred layer and the panels underneath are the
  * second. Nothing inside the bar may use `.glass` again — which is why the
@@ -73,15 +68,6 @@ export function Header({ locale }: { locale: Locale }) {
                 className="size-9 justify-center px-0 sm:w-auto sm:min-w-56 sm:justify-start sm:px-2.5 coarse:size-11"
               />
             ) : null}
-
-            <ThemeSwitch
-              labels={{
-                group: t('theme.label'),
-                switchTo: t('theme.switchTo'),
-                light: t('theme.light'),
-                dark: t('theme.dark'),
-              }}
-            />
 
             <AppearanceMenu locale={locale} />
 

@@ -106,15 +106,32 @@ export function ToolCard({
         )}
       >
         <div className="flex items-start gap-3">
-          <IconTile
-            icon={Icon}
-            accent={tool.accent}
-            size="md"
-            className={cn(
-              'transition-transform duration-200 ease-glide',
-              'group-focus-within:scale-[1.03] group-hover:scale-[1.03]',
-            )}
-          />
+          {tool.iconSrc ? (
+            // Same-origin owner artwork keeps custom cards visually distinct;
+            // the lucide icon remains available as the semantic fallback.
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={tool.iconSrc}
+              alt=""
+              width={40}
+              height={40}
+              className={cn(
+                'size-10 shrink-0 rounded-md bg-white/90 object-contain p-0.5 shadow-e1',
+                'transition-transform duration-200 ease-glide',
+                'group-focus-within:scale-[1.03] group-hover:scale-[1.03]',
+              )}
+            />
+          ) : (
+            <IconTile
+              icon={Icon}
+              accent={tool.accent}
+              size="md"
+              className={cn(
+                'transition-transform duration-200 ease-glide',
+                'group-focus-within:scale-[1.03] group-hover:scale-[1.03]',
+              )}
+            />
+          )}
 
           <div className="min-w-0 flex-1">
             <h3 className="flex items-center gap-1 text-base font-semibold">

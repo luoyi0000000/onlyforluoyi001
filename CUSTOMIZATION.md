@@ -40,6 +40,7 @@ home: {
   desc: { zh: '一句清楚的说明', en: 'One clear sentence' },
   categoryId: 'work',
   icon: 'Wrench',
+  iconSrc: '/images/my-tool.png', // 可选：使用 public/ 下的自定义卡片图标
   kind: 'internal',
   route: 't/my-tool', // 有自定义页面时填写；使用通用外壳时可省略
   tags: ['work', 'text'],
@@ -53,7 +54,7 @@ home: {
 - 临时隐藏：设 `enabled: false`，不要删除，方便以后恢复。
 - 外部工具：设 `kind: 'link'` 并提供安全的 `https://` 地址 `href`。
 - 调整分类：修改文件顶部的 `categories`；`id` 要保持稳定，显示名可自由改。
-- 上线自己的内容后，删除示例条目或移除它们的 `demo: true`。
+- 站点目前没有内置示例条目；新增个人页面时直接追加到 `tools` 数组即可。
 - 图标名必须注册在 `lib/icons.ts`；非法分类、重复 id 或危险链接会让构建明确失败。
 
 ## 3. 五个 JSX 自定义区

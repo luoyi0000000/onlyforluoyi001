@@ -13,9 +13,9 @@ import type { Locale } from '@/types/i18n'
  * Theme, accent and density behind one button in the header.
  *
  * Three switch clusters side by side made the bar into a settings panel that
- * happened to have a logo on it. Folding them behind a single disclosure leaves
- * the header with three things — brand, search, language — and gives the
- * appearance controls room to be labelled properly once they are open.
+ * happened to have a logo on it. Folding them behind a single disclosure keeps
+ * the header compact and gives the appearance controls room to be labelled
+ * properly once they are open.
  *
  * It is a native `<details>`, which means: zero client JavaScript, keyboard and
  * screen-reader behaviour for free, and it still works in a static export with
