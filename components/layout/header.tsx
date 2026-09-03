@@ -1,3 +1,7 @@
+'use client'
+
+import { useEffect, useState } from 'react'
+
 import { AppearanceMenu } from '@/components/layout/appearance-menu'
 import { Brand } from '@/components/layout/brand'
 import { LocaleToggle } from '@/components/locale-toggle'
@@ -5,20 +9,14 @@ import { SearchTrigger } from '@/components/search-trigger'
 import { siteConfig } from '@/config/site'
 import { createTranslator } from '@/lib/i18n'
 import { localePath } from '@/lib/utils'
+import { cn } from '@/lib/utils'
 import { localeMeta, type Locale } from '@/types/i18n'
 
 /**
- * Sticky glass bar. It is a server component: only the individual switches are
- * client components, so the header itself costs no client JS.
- *
- * The bar floats rather than spanning the viewport: the sticky element itself is
- * transparent and only carries the top inset, and the glass is a rounded slab
- * inside it, aligned to the same `max-w-6xl` column as the panels below. That is
- * the whole point of the treatment — content is visible sliding past above it
- * and along both sides, so the surface reads as a pane of glass over the page
- * instead of a painted strip attached to the top of the window. `.liquid-bar`
- * holds the material (see `globals.css`) and `.bar-tint` is the fill that fades
- * in as the page scrolls under it.
+ * Fixed responsive header. The outer shell stays out of the page flow and the
+ * inner navigation contracts after the user scrolls, matching the reference
+ * navigation pattern without depending on CSS scroll timelines or nested blur
+ * layers. That keeps the header above animated content in every browser.
  *
  * Four things live here — who this is, how to search it, where appearance is
  * configured, and what language it is in. The appearance disclosure keeps the
@@ -41,17 +39,31 @@ import { localeMeta, type Locale } from '@/types/i18n'
 export function Header({ locale }: { locale: Locale }) {
   const t = createTranslator(locale)
   const { enableCommandPalette } = siteConfig.features
+  const [scrolled, setScrolled] = useState(false)
+
+  useEffect(() => {
+    const update = () => setScrolled(window.scrollY > 20)
+    update()
+    window.addEventListener('scroll', update, { passive: true })
+    return () => window.removeEventListener('scroll', update)
+  }, [])
 
   return (
-    <header id="top" className="sticky top-0 z-40 pt-2 safe-x sm:pt-3">
-      <div className="mx-auto w-full max-w-6xl px-4 sm:px-6">
-        <div className="liquid-bar flex flex-wrap items-center gap-x-3 gap-y-2 rounded-xl glass px-3 py-2 sm:px-4 sm:py-2.5">
-          {/* The scroll-reactive fill. Decorative, and behind everything: it is
-              the one part of the material that needs to be an element rather
-              than a pseudo-element, because both of those are already spent on
-              the sheen and the rim. */}
-          <div aria-hidden="true" className="bar-tint" />
-
+    <header id="top" className="pointer-events-none fixed inset-x-0 top-0 z-40 safe-x">
+      <div
+        className={cn(
+          'pointer-events-auto mx-auto transition-[max-width,padding] duration-300 ease-glide',
+          scrolled ? 'max-w-4xl px-3 pt-3' : 'max-w-6xl px-4 pt-2 sm:px-6 sm:pt-3',
+        )}
+      >
+        <div
+          className={cn(
+            'flex flex-wrap items-center gap-x-3 gap-y-2 transition-[min-height,padding,background-color,box-shadow,border-radius] duration-300 ease-glide',
+            scrolled
+              ? 'min-h-12 rounded-2xl border border-border bg-card px-3 py-1.5 shadow-e2 sm:px-4'
+              : 'rounded-xl glass px-3 py-2 sm:px-4 sm:py-2.5',
+          )}
+        >
           <Brand locale={locale} />
 
           <div className="ml-auto flex items-center gap-2">

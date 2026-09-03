@@ -53,4 +53,16 @@ describe('owner toolbox configuration', () => {
     assert.equal(siteConfig.background.position, 'center 42%')
     assert.equal(siteConfig.background.mobilePosition, '66% 42%')
   })
+
+  it('uses the new owner-facing name and simplified catalogue controls', () => {
+    assert.deepEqual(siteConfig.name, {
+      zh: 'luoyi001来啦',
+      en: 'luoyi001 is come here',
+    })
+    assert.equal(siteConfig.home.showCategoryNavigation, false)
+    assert.deepEqual(
+      siteConfig.footer.links.map((link) => link.label),
+      [{ zh: '关于', en: 'About' }],
+    )
+  })
 })

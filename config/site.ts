@@ -75,7 +75,7 @@ export interface SiteConfig {
 }
 
 export const siteConfig: SiteConfig = {
-  name: { zh: '工具箱', en: 'Toolbox' },
+  name: { zh: 'luoyi001来啦', en: 'luoyi001 is come here' },
 
   brand: {
     logoSrc: '/images/p2.png',
@@ -125,7 +125,7 @@ export const siteConfig: SiteConfig = {
 
   home: {
     showInlineSearch: true,
-    showCategoryNavigation: true,
+    showCategoryNavigation: false,
     emptySlots: {
       top: 'hidden',
       middle: 'hidden',
@@ -133,14 +133,7 @@ export const siteConfig: SiteConfig = {
   },
 
   footer: {
-    links: [
-      { label: { zh: '关于', en: 'About' }, href: 'about' },
-      {
-        label: { zh: '源码', en: 'Source' },
-        href: 'https://github.com/luoyi0000000/onlyforluoyi001',
-        external: true,
-      },
-    ],
+    links: [{ label: { zh: '关于', en: 'About' }, href: 'about' }],
   },
 
   recentLimit: 6,

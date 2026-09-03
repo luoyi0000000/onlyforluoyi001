@@ -44,7 +44,7 @@ export function HomeSlot(_props: SlotProps): ReactNode {
   return null
 }
 
-/** Rendered in the footer, above the privacy statement. */
+/** Rendered in the footer, above the footer links. */
 export function FooterSlot(_props: SlotProps): ReactNode {
   return null
 }

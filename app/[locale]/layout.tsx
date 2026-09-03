@@ -113,17 +113,10 @@ export default async function LocaleLayout({
           <SiteBackground />
           <div className="flex min-h-dvh flex-col">
             <Header locale={locale} />
-            {/* `relative z-0` guards the sticky header. The category panels run a
-                scroll-driven `transform` animation, which promotes each of them to
-                its own compositor layer, and a promoted layer is exactly the kind
-                of thing that escapes above a `backdrop-filter` bar in a browser
-                with a compositing bug. An explicit z-index makes this a stacking
-                context at level 0, which no descendant can climb out of, so the
-                `z-40` header is above the whole page by construction rather than
-                by the compositor agreeing with us. Every overlay that must outrank
-                the header (drawer, palette, shortcuts, skip link) is portaled to
-                `body` or mounted outside `<main>`, so nothing is trapped under it. */}
-            <main id="main" className="relative z-0 flex-1">
+            {/* The header is fixed like the reference navigation, so reserve its
+                compact height here. The z-0 stacking context keeps page content
+                below the header while portaled overlays remain above both. */}
+            <main id="main" className="relative z-0 flex-1 pt-14 sm:pt-16">
               {children}
             </main>
             <Footer locale={locale} slot={<FooterSlot locale={locale} />} />

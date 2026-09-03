@@ -119,11 +119,7 @@ export const en: Dictionary = {
   },
 
   footer: {
-    privacyTitle: 'Privacy promise',
-    privacy:
-      'Client-only site: no backend, no API, no analytics, no third-party scripts or font requests. Theme, language, pins and recents live in this browser’s localStorage. Your data never leaves the machine.',
     aboutLink: 'About',
-    sourceLink: 'Source',
     backToTop: 'Back to top',
   },
 

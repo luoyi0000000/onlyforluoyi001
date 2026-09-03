@@ -186,7 +186,7 @@ export function Hero({
       {dismissible ? (
         <GlassCard
           data-hero-restore=""
-          surface="inset"
+          surface="solid"
           pad="sm"
           className="flex-wrap items-center gap-x-3 gap-y-1"
         >

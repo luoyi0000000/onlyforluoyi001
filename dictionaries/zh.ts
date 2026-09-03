@@ -120,11 +120,7 @@ export const zh = {
   },
 
   footer: {
-    privacyTitle: '隐私承诺',
-    privacy:
-      '纯前端站点：没有后端、没有接口、没有埋点、没有第三方脚本与字体请求。主题、语言、收藏与最近使用只写入本机 localStorage，数据不出本机。',
     aboutLink: '关于本站',
-    sourceLink: '源码',
     backToTop: '回到顶部',
   },
 

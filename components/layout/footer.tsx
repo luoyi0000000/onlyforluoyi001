@@ -1,4 +1,4 @@
-import { ArrowUp, ExternalLink, ShieldCheck } from 'lucide-react'
+import { ArrowUp, ExternalLink } from 'lucide-react'
 import Link from 'next/link'
 import type { ReactNode } from 'react'
 
@@ -16,9 +16,6 @@ const linkClass = cn(
 )
 
 /**
- * The privacy promise is part of the footer on every page, not buried in About:
- * it is the one claim a user of a tool site most wants to verify at a glance.
- *
  * `slot` is an optional extension point. Pass nothing and no extra DOM is
  * emitted at all.
  */
@@ -28,14 +25,6 @@ export function Footer({ locale, slot }: { locale: Locale; slot?: ReactNode }) {
   return (
     <footer className="mx-auto w-full max-w-7xl px-4 pt-section safe-x pb-8 safe-b sm:px-6">
       <GlassCard pad="lg" className="flex flex-col gap-5">
-        <div className="flex flex-col gap-2">
-          <h2 className="flex items-center gap-2 text-xs font-semibold text-foreground">
-            <ShieldCheck aria-hidden="true" className="size-4 text-primary" />
-            {t('footer.privacyTitle')}
-          </h2>
-          <p className="measure text-2xs text-muted-foreground">{t('footer.privacy')}</p>
-        </div>
-
         {slot}
 
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border pt-4">

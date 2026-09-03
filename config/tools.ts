@@ -49,7 +49,7 @@ import type { ToolCategory, ToolItem } from '@/types/tool'
 /* Keep the launcher focused on pages you actually use. Add another category
    only when it has a real page to put in it. */
 export const categories: ToolCategory[] = [
-  { id: 'daily', name: { zh: '常用', en: 'Everyday' }, icon: 'Zap', order: 1 },
+  { id: 'daily', name: { zh: '是好东西哦', en: 'Good stuff' }, icon: 'Zap', order: 1 },
 ]
 
 /* ---------------------------------------------------------------------------
