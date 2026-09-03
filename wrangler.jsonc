@@ -5,7 +5,7 @@
   //
   // Deploy with `pnpm run deploy`. `wrangler` is intentionally not a dependency
   // of this project — see README.
-  "name": "toolbox",
+  "name": "onlyforluoyi001",
   "compatibility_date": "2026-09-01",
 
   // Build `out/` as part of deploying, instead of relying on whoever runs the
