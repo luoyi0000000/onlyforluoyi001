@@ -26,11 +26,11 @@ pnpm run audit:external   # 机械验证「零外部请求」，构建后跑
 
 根路径 `/` 的语言跳转页是手写的 `public/index.html`，只在导出后的 `out/` 里生效；开发时请直接访问 `/zh/` 或 `/en/`。
 
-`pnpm run test` 用 Node 内置的 `node:test` 直接跑 `tests/*.test.ts`，没有装任何测试框架 —— 这需要 **Node ≥ 22.18**（原生类型剥离）。站点本身构建只要 Node ≥ 20.9；如果你的 Node 是 20.x，`build` 正常，只有 `test` 跑不了。覆盖的是两处「读起来对不代表是对的」的逻辑：快捷键匹配规则（`matchesHotkey`，包括输入框里不抢键、IME 组词期间让键、Alt 一律不触发）和 localStorage 的输入校验（`readStringList`，非数组、超长 id、重复、上限 200、读写抛异常）。
+`pnpm run test` 用 Node 内置的 `node:test` 直接跑 `tests/*.test.ts`，没有装任何测试框架 —— 这需要 **Node ≥ 22.18**（原生类型剥离）。站点本身构建只要 Node ≥ 20.9；如果你的 Node 是 20.x，`build` 正常，只有 `test` 跑不了。测试覆盖快捷键匹配、localStorage 输入校验、首页搜索/分类组合，以及空自定义区的显示策略。
 
 ## 加一个工具：只改一个文件
 
-在 `config/tools.ts` 的 `tools` 数组里追加一个对象，别的什么都不用动。卡片、分类分组、侧边栏计数、搜索索引、命令面板、以及 `/<语言>/t/<id>/` 详情页会自动出现。
+在 `config/tools.ts` 的 `tools` 数组里追加一个对象，别的什么都不用动。卡片、分类分组、分类计数、搜索索引、命令面板、以及 `/<语言>/t/<id>/` 详情页会自动出现。
 
 ```ts
 {
@@ -55,17 +55,19 @@ pnpm run audit:external   # 机械验证「零外部请求」，构建后跑
 
 ## 换外观与站点信息
 
-- `config/site.ts`：站名、口号、Hero 文案与按钮、页脚链接、默认强调色、功能开关（Hero、命令面板等）。
-- `components/slots.tsx`：三个可选 JSX 插槽 `HeroSlot` / `SidebarExtraSlot` / `FooterSlot`。不传内容时不渲染任何 DOM。
-- `app/globals.css`：全部设计令牌（oklch）。改主题只改这里的变量：颜色、圆角 8/12/16/24、四级阴影、`--glass-*`、`--glow-*`、字号阶梯、密度。
+- `config/site.ts`：站名、口号、Hero 文案与按钮、页脚链接、默认强调色、首页搜索/分类、空插槽显示策略，以及全站功能开关。
+- `components/slots.tsx`：五个可选 JSX 插槽 `HeroSlot` / `HomeTopSlot` / `HomeMidSlot` / `HomeSlot` / `FooterSlot`。填入内容就显示；首页两个大插槽为空时默认不占空间，也能切换成紧凑或完整的编辑提示框。
+- `app/globals.css`：全部设计令牌（oklch）。改主题只改这里的变量：颜色、圆角 8/12/16/24、四级阴影、`--glass-*`、`--site-background-*`、字号阶梯、密度。
 - 强调色四套（靛蓝/紫罗兰/青/翠绿）由 `<html data-accent>` 一个属性切换，右上角有切换器。
+
+完整的字段说明、复制即用示例和安全修改边界见 [`CUSTOMIZATION.md`](./CUSTOMIZATION.md)。
 
 ## 键盘
 
 | 键                 | 作用                                |
 | ------------------ | ----------------------------------- |
 | `⌘K` / `Ctrl+K`    | 打开命令面板                        |
-| `/`                | 聚焦搜索框                          |
+| `/`                | 打开命令面板并聚焦搜索              |
 | `?`                | 快捷键帮助                          |
 | `Esc`              | 关闭当前浮层并把焦点还回原处        |
 | `↑` `↓`            | 在面板结果间移动                    |
@@ -115,13 +117,14 @@ app/[locale]/            布局（root layout 在这里，为了 <html lang> 正
                          t/[id] 工具页外壳、not-found
 components/              业务组件；ui/ 下是手工 vendor 进来的 shadcn 风格基础件
 components/ui/glass-card 全站唯一写 backdrop-blur 的地方
-config/                  site.ts / tools.ts —— 你要改的就是这两个
+config/                  site.ts / tools.ts —— 站点信息、首页选项与工具注册表
+components/slots.tsx     五个无需改页面结构即可填充的 JSX 自定义区
 dictionaries/            zh.ts 是字典的形状来源，en.ts 少一个键就编译不过
 hooks/                   收藏、最近使用、偏好、快捷键
 lib/                     搜索索引、图标注册表、i18n、配置校验、工具读模型
 public/                  404.html、index.html（语言跳转）、_headers、图标、字体
 scripts/                 导出后处理、外部请求审计、本地静态服务器
-tests/                   node:test 单测（快捷键匹配、localStorage 校验）
+tests/                   node:test 单测（交互规则、存储校验、首页筛选与插槽）
 ```
 
 ## 无障碍与响应式

@@ -27,12 +27,12 @@ import { cn } from '@/lib/utils'
  * The `<h1>` exists in both states and only one of them is ever displayed, so
  * the page keeps exactly one level-1 heading either way.
  *
- * Layout note: everything is centred on one axis. A launcher's first screen is
- * a title and two choices, and centring is what stops a 1152px-wide slab from
- * reading as an empty left-aligned form. The decoration is a 1px gradient rim
- * on the top edge (`.slab-edge`) and a gradient fill on the headline; there is
- * deliberately no glow behind the panel, because glass is translucent and a
- * bloom back there would show through and put body copy on a gradient.
+ * Layout note: wide screens use an asymmetric copy/actions grid so the intro is
+ * faster to scan and wastes less vertical space; narrow screens stack the same
+ * content in reading order. The decoration is a 1px gradient rim on the top
+ * edge (`.slab-edge`) and a gradient fill on the headline. There is deliberately
+ * no glow behind the panel, because glass is translucent and a bloom back there
+ * would show through and put body copy on a gradient.
  */
 export interface HeroProps {
   /** Big headline, shown while the panel is open. */
@@ -105,54 +105,64 @@ export function Hero({
       <GlassCard data-hero-panel="" pad="lg" className="overflow-hidden rounded-xl">
         <span aria-hidden="true" className="slab-edge" />
 
-        <div className="flex flex-col items-center gap-4 py-2 text-center sm:gap-5 sm:py-6">
-          {eyebrow ? (
-            <p
-              style={delay(0)}
-              className={cn(
-                'rise-in inline-flex items-center gap-1.5 rounded-full border border-border',
-                'bg-inset px-2.5 py-1 text-2xs font-medium text-muted-foreground',
-              )}
+        <div className="grid gap-6 py-1 sm:py-3 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-end lg:gap-12 lg:py-5">
+          <div className="flex min-w-0 flex-col items-start gap-4 text-left">
+            {eyebrow ? (
+              <p
+                style={delay(0)}
+                className={cn(
+                  'rise-in inline-flex items-center gap-1.5 rounded-full border border-border',
+                  'bg-inset px-2.5 py-1 text-2xs font-medium text-muted-foreground',
+                )}
+              >
+                <Sparkles aria-hidden="true" className="size-4 shrink-0 text-primary" />
+                {eyebrow}
+              </p>
+            ) : null}
+
+            <h1
+              style={delay(1)}
+              className="rise-in text-gradient max-w-3xl text-2xl font-semibold tracking-tight text-balance sm:text-3xl lg:text-4xl"
             >
-              <Sparkles aria-hidden="true" className="size-4 shrink-0 text-primary" />
-              {eyebrow}
+              {title}
+            </h1>
+
+            <p
+              style={delay(2)}
+              className="rise-in measure text-xs leading-relaxed text-muted-foreground sm:text-base"
+            >
+              {subtitle}
             </p>
-          ) : null}
 
-          <h1
-            style={delay(1)}
-            className="rise-in text-gradient text-2xl font-semibold tracking-tight text-balance sm:text-3xl lg:text-4xl"
-          >
-            {title}
-          </h1>
-
-          <p
-            style={delay(2)}
-            className="rise-in mx-auto measure text-xs leading-relaxed text-muted-foreground sm:text-base"
-          >
-            {subtitle}
-          </p>
-
-          {slot}
-
-          <div style={delay(3)} className="rise-in flex flex-wrap justify-center gap-2 pt-1">
-            <a href={primary.href} className={buttonVariants({ variant: 'primary', size: 'md' })}>
-              {primary.label}
-            </a>
-            <a href={secondary.href} className={buttonVariants({ variant: 'outline', size: 'md' })}>
-              {secondary.label}
-            </a>
+            {slot}
           </div>
 
-          {hint ? (
-            <p
-              style={delay(4)}
-              className="rise-in flex flex-wrap items-center justify-center gap-1.5 text-2xs text-muted-foreground"
+          <div className="flex flex-col items-start gap-3 lg:items-end lg:pb-1">
+            <div
+              style={delay(3)}
+              className="rise-in flex flex-wrap justify-start gap-2 lg:justify-end"
             >
-              <ShortcutHint keys={['mod', 'K']} apple={apple} />
-              <span>{hint}</span>
-            </p>
-          ) : null}
+              <a href={primary.href} className={buttonVariants({ variant: 'primary', size: 'md' })}>
+                {primary.label}
+              </a>
+              <a
+                href={secondary.href}
+                className={buttonVariants({ variant: 'outline', size: 'md' })}
+              >
+                {secondary.label}
+              </a>
+            </div>
+
+            {hint ? (
+              <p
+                style={delay(4)}
+                className="rise-in flex flex-wrap items-center gap-1.5 text-2xs text-muted-foreground"
+              >
+                <ShortcutHint keys={['mod', 'K']} apple={apple} />
+                <span>{hint}</span>
+              </p>
+            ) : null}
+          </div>
         </div>
 
         {dismissible ? (

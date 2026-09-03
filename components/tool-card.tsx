@@ -60,11 +60,9 @@ export interface ToolCardProps {
 /**
  * One entry in the launcher.
  *
- * Icon-first and vertical: a 48px tile on its own row, then the name, then two
- * lines of description, then whatever status the entry carries. A launcher is
- * scanned by shape and colour before it is read, and the tile is the only part
- * of a card that is recognisable at a glance, so it gets the top-left corner
- * instead of sharing a cramped row with a truncated title.
+ * The icon and title share one compact identity row, followed by the description
+ * and status. The whole surface remains the link target while the favorite
+ * button sits above the stretched link layer as a separate control.
  *
  * Tags are deliberately not on the card face. They still exist in the config and
  * still feed the command palette's search index; putting three grey chips under
@@ -100,30 +98,66 @@ export function ToolCard({
         surface="inset"
         interactive
         className={cn(
-          'relative flex h-full flex-col gap-3 overflow-hidden p-card',
+          'relative flex h-full min-h-32 flex-col gap-4 overflow-hidden p-card',
           // The border warms to the accent on hover and on keyboard focus, so
           // the two states look identical instead of the pointer getting the
           // nicer one.
           'group-focus-within:border-primary/35 group-hover:border-primary/35',
         )}
       >
-        <span aria-hidden="true" className="card-sheen" />
-
-        <span
-          aria-hidden="true"
-          className="card-shimmer absolute inset-0 opacity-0 transition-opacity duration-200 ease-glide group-focus-within:opacity-100 group-hover:opacity-100"
-        />
-
-        <div className="flex items-start justify-between gap-2">
+        <div className="flex items-start gap-3">
           <IconTile
             icon={Icon}
             accent={tool.accent}
-            size="lg"
+            size="md"
             className={cn(
               'transition-transform duration-200 ease-glide',
-              'group-focus-within:scale-105 group-hover:scale-105',
+              'group-focus-within:scale-[1.03] group-hover:scale-[1.03]',
             )}
           />
+
+          <div className="min-w-0 flex-1">
+            <h3 className="flex items-center gap-1 text-base font-semibold">
+              {/* The stretched ::before turns the whole card into one hit area
+                  and one tab stop, so the star can sit on top without nesting
+                  interactive elements. */}
+              <a
+                href={target.href}
+                data-card-link=""
+                tabIndex={tabIndex}
+                onKeyDown={onKeyDown}
+                onClick={() => onNavigate?.(tool.id)}
+                aria-label={fill(labels.open, { name })}
+                {...(target.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                className={cn(
+                  'min-w-0 truncate rounded-sm',
+                  'before:absolute before:inset-0 before:rounded-lg before:content-[""]',
+                  'focus-visible:outline-none focus-visible:before:outline-2',
+                  'focus-visible:before:outline-offset-2 focus-visible:before:outline-ring',
+                )}
+              >
+                <span aria-hidden="true">{name}</span>
+              </a>
+
+              {target.external ? (
+                <>
+                  <ArrowUpRight
+                    aria-hidden="true"
+                    className={cn(
+                      'size-4 shrink-0 text-muted-foreground',
+                      'transition-transform duration-200 ease-glide',
+                      'group-focus-within:-translate-y-px group-hover:-translate-y-px',
+                    )}
+                  />
+                  <span className="sr-only">{labels.externalHint}</span>
+                </>
+              ) : null}
+            </h3>
+
+            <p className="mt-1 line-clamp-2 text-xs leading-relaxed text-muted-foreground">
+              {tool.desc[locale]}
+            </p>
+          </div>
 
           {onToggleFavorite ? (
             <button
@@ -132,19 +166,12 @@ export function ToolCard({
               aria-label={fill(favorite ? labels.pinOff : labels.pinOn, { name })}
               onClick={() => onToggleFavorite(tool.id)}
               className={cn(
-                // `relative z-10` lifts it above the stretched ::before of the
-                // card link, so it stays clickable without being nested inside
-                // the anchor. It shares the tile's row instead of floating in a
-                // corner, which keeps it aligned at either density.
-                'relative z-10 -mt-1 -mr-1 inline-flex size-7 shrink-0 items-center justify-center rounded-sm',
+                'relative z-10 -mt-1 -mr-1 inline-flex size-8 shrink-0 items-center justify-center rounded-sm',
                 'text-muted-foreground transition-opacity duration-200 ease-glide',
                 'hover:bg-foreground/8 hover:text-foreground',
-                // Fades in on hover, but it is a real tab stop at all times: the
-                // opacity change never removes it from the focus order, and
-                // `focus-visible` brings it back to full opacity.
                 'focus-visible:opacity-100 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring',
                 'group-focus-within:opacity-100 group-hover:opacity-100 coarse:size-11 coarse:opacity-100',
-                favorite ? 'text-warning opacity-100' : 'opacity-0',
+                favorite ? 'text-warning opacity-100' : 'opacity-55',
               )}
             >
               <Star
@@ -154,53 +181,6 @@ export function ToolCard({
               />
             </button>
           ) : null}
-        </div>
-
-        <div className="flex flex-col gap-1">
-          <h3 className="flex items-center gap-1 text-base font-semibold">
-            {/* The stretched ::before turns the whole card into one hit area
-                and one tab stop, so the star can sit on top without nesting
-                interactive elements. The focus ring is drawn on that same
-                pseudo-element, which is why it outlines the card and not the
-                three words of the title. */}
-            <a
-              href={target.href}
-              data-card-link=""
-              tabIndex={tabIndex}
-              onKeyDown={onKeyDown}
-              onClick={() => onNavigate?.(tool.id)}
-              aria-label={fill(labels.open, { name })}
-              {...(target.external ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
-              className={cn(
-                // Blockified as a flex child, which is what makes `truncate`
-                // work on what is otherwise an inline element.
-                'min-w-0 truncate rounded-sm',
-                'before:absolute before:inset-0 before:rounded-lg before:content-[""]',
-                'focus-visible:outline-none focus-visible:before:outline-2',
-                'focus-visible:before:outline-offset-2 focus-visible:before:outline-ring',
-              )}
-            >
-              <span aria-hidden="true">{name}</span>
-            </a>
-
-            {target.external ? (
-              <>
-                <ArrowUpRight
-                  aria-hidden="true"
-                  className={cn(
-                    'size-4 shrink-0 text-muted-foreground',
-                    'transition-transform duration-200 ease-glide',
-                    'group-focus-within:-translate-y-px group-hover:-translate-y-px',
-                  )}
-                />
-                <span className="sr-only">{labels.externalHint}</span>
-              </>
-            ) : null}
-          </h3>
-
-          <p className="line-clamp-2 text-2xs leading-relaxed text-muted-foreground">
-            {tool.desc[locale]}
-          </p>
         </div>
 
         {hasMeta ? (

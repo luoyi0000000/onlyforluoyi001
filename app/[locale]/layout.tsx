@@ -3,10 +3,9 @@ import type { ReactNode } from 'react'
 
 import '../globals.css'
 
-import { BackgroundGlow } from '@/components/layout/background-glow'
 import { Footer } from '@/components/layout/footer'
 import { Header } from '@/components/layout/header'
-import { NoiseOverlay } from '@/components/layout/noise-overlay'
+import { SiteBackground } from '@/components/layout/site-background'
 import { PaletteHost } from '@/components/palette-host'
 import { PreferenceScript } from '@/components/preference-script'
 import { SkipLink } from '@/components/skip-link'
@@ -105,11 +104,13 @@ export default async function LocaleLayout({
           type="font/woff2"
           crossOrigin="anonymous"
         />
+        {siteConfig.background.imageSrc ? (
+          <link rel="preload" href={siteConfig.background.imageSrc} as="image" />
+        ) : null}
         <PreferenceScript />
         <ThemeProvider>
           <SkipLink label={t('a11y.skipToContent')} />
-          <BackgroundGlow />
-          <NoiseOverlay />
+          <SiteBackground />
           <div className="flex min-h-dvh flex-col">
             <Header locale={locale} />
             {/* `relative z-0` guards the sticky header. The category panels run a

@@ -20,15 +20,12 @@
   # no `dangerouslySetInnerHTML`, and `connect-src 'self'` means injected script
   # would have nowhere to send anything.
   #
-  # `img-src data:` is for the noise overlay, which is an inline SVG data URI
-  # used as a CSS background — CSS `url()` in a background is governed by
-  # `img-src`, not `style-src`.
   # `worker-src` allows `blob:` because a future tool that does heavy local
   # computation (hashing a large file, decoding an image) will want a Web Worker
   # built from a blob to keep the UI responsive. Nothing currently uses one.
   # `media-src 'none'` is likewise a today statement: a tool that previews audio
   # or video from a local file has to widen it here.
-  Content-Security-Policy: default-src 'self'; base-uri 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'self' blob:; manifest-src 'self'; form-action 'none'; frame-ancestors 'none'
+  Content-Security-Policy: default-src 'self'; base-uri 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self'; font-src 'self'; connect-src 'self'; media-src 'none'; object-src 'none'; frame-src 'none'; worker-src 'self' blob:; manifest-src 'self'; form-action 'none'; frame-ancestors 'none'
   # No MIME sniffing: a .txt download must never be executed as script.
   X-Content-Type-Options: nosniff
   # Nothing on this site needs to know where a visitor came from.
@@ -55,3 +52,8 @@
 # replacing the file would leave old visitors on the old one. Thirty days.
 /fonts/*
   Cache-Control: public, max-age=2592000
+
+# Background artwork has a stable owner-editable filename. Cache it for one
+# week so a replacement reaches returning visitors without a manual purge.
+/images/*
+  Cache-Control: public, max-age=604800

@@ -56,9 +56,22 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       badges: { new: t('badge.new'), beta: t('badge.beta'), wip: t('badge.wip') },
       demoBadge: t('badge.demo'),
     },
+    discovery: {
+      search: t('actions.search'),
+      placeholder: t('actions.searchPlaceholder'),
+      clearSearch: t('search.clear'),
+      categories: t('nav.categories'),
+      allCategories: t('sections.all'),
+      clearFilters: t('empty.clearFilters'),
+      resultCount: t('search.resultCount'),
+      resultCountFiltered: t('search.resultCountFiltered'),
+    },
     countLabel: t('sidebar.toolCount'),
     emptyTitle: t('empty.noToolsTitle'),
     emptyDesc: t('empty.noToolsDesc'),
+    noResultsTitle: t('empty.noResultsTitle'),
+    noResultsDesc: t('empty.noResultsDesc'),
+    clearFilters: t('empty.clearFilters'),
     slotTitle: t('slot.title'),
     slotDesc: t('slot.desc'),
   }
@@ -97,6 +110,7 @@ export default async function HomePage({ params }: { params: Promise<{ locale: s
       <HomeShell
         locale={locale}
         labels={labels}
+        settings={siteConfig.home}
         topSlot={<HomeTopSlot locale={locale} />}
         midSlot={<HomeMidSlot locale={locale} />}
         slot={<HomeSlot locale={locale} />}

@@ -172,7 +172,7 @@ function validateTools(
   for (const id of categoryIds) {
     if (!used.has(id)) {
       report.warnings.push(
-        `config/tools.ts: category "${id}" has no tools. It is hidden from the sidebar and the grid.`,
+        `config/tools.ts: category "${id}" has no tools. It is hidden from category navigation and the grid.`,
       )
     }
   }

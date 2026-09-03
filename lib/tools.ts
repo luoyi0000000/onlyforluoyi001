@@ -45,7 +45,7 @@ export function groupByCategory(list: readonly ToolItem[] = enabledTools): Categ
     .filter((group) => group.tools.length > 0)
 }
 
-/** How many enabled tools each category holds — the sidebar counter. */
+/** How many enabled tools each category holds — used by catalogue filter chips. */
 export function categoryCounts(list: readonly ToolItem[] = enabledTools): Record<string, number> {
   const counts: Record<string, number> = {}
   for (const category of orderedCategories) counts[category.id] = 0
@@ -57,7 +57,7 @@ export function categoryCounts(list: readonly ToolItem[] = enabledTools): Record
 
 export const pinnedTools: readonly ToolItem[] = enabledTools.filter((tool) => tool.pinned === true)
 
-/** Every distinct tag, alphabetised. Drives the tag filter chips. */
+/** Every distinct tag, alphabetised. Available to custom filter surfaces. */
 export const allTags: readonly string[] = [
   ...new Set(enabledTools.flatMap((tool) => tool.tags ?? [])),
 ].sort((a, b) => a.localeCompare(b))

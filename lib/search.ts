@@ -1,6 +1,5 @@
-import type { Locale } from '@/types/i18n'
-import { locales } from '@/types/i18n'
-import type { ToolItem } from '@/types/tool'
+import { locales, type Locale } from '../types/i18n.ts'
+import type { ToolItem } from '../types/tool.ts'
 
 /**
  * Ranked fuzzy search over the tool registry. Zero dependencies: the corpus is

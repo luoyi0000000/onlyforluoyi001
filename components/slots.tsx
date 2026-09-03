@@ -24,19 +24,17 @@ export function HeroSlot(_props: SlotProps): ReactNode {
 }
 
 /**
- * Fills the first reserved band under the hero.
- *
- * Unlike the hero and footer slots, this one and `HomeMidSlot` have a visible
- * home even while they return null: each band is a real panel with a placeholder
- * in it, sized to match the tool panel below. That is on purpose — they are the
- * page's headline extension points, and a slot you cannot see is a slot you
- * forget you have.
+ * Fills the first optional band under the hero. Empty bands are hidden by
+ * default; use `siteConfig.home.emptySlots.top` to expose an authoring frame.
  */
 export function HomeTopSlot(_props: SlotProps): ReactNode {
   return null
 }
 
-/** Fills the second reserved band, between `HomeTopSlot` and the tool panel. */
+/**
+ * Fills the second optional band, between `HomeTopSlot` and the tool panel.
+ * Its empty presentation is controlled independently by `emptySlots.middle`.
+ */
 export function HomeMidSlot(_props: SlotProps): ReactNode {
   return null
 }

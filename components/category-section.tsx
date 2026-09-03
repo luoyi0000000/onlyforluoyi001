@@ -27,7 +27,7 @@ import type { ToolItem } from '@/types/tool'
  * blur nothing, since a nested filter only sees its ancestor's output.
  */
 export interface CategorySectionProps {
-  /** Anchor target — the sidebar and the palette both jump here. */
+  /** Anchor target — category navigation and the palette can jump here. */
   id: string
   title: string
   /** Either a lucide component or a registered icon name from the config. */

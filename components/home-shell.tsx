@@ -1,34 +1,34 @@
 'use client'
 
-import { LayoutTemplate, PackageOpen } from 'lucide-react'
-import { useMemo, type ReactNode } from 'react'
+import { LayoutTemplate, PackageOpen, SearchX } from 'lucide-react'
+import { useMemo, useState, type ReactNode } from 'react'
 
 import { CategorySection } from '@/components/category-section'
 import { EmptyState } from '@/components/empty-state'
+import { HomeDiscovery, type HomeDiscoveryLabels } from '@/components/home-discovery'
 import type { ToolCardLabels } from '@/components/tool-card'
+import { Button } from '@/components/ui/button'
 import { GlassCard } from '@/components/ui/glass-card'
+import type { EmptySlotPresentation, HomeConfig } from '@/config/site'
 import { useFavorites } from '@/hooks/use-favorites'
 import { useRecent } from '@/hooks/use-recent'
-import { groupByCategory } from '@/lib/tools'
+import { selectHomeTools } from '@/lib/home-catalogue'
+import { shouldRenderHomeSlot } from '@/lib/home-layout'
+import { categoryCounts, enabledTools, groupByCategory, orderedCategories } from '@/lib/tools'
 import { cn, fill } from '@/lib/utils'
 import type { Locale } from '@/types/i18n'
 
 /**
- * The whole home page below the hero: two reserved bands you fill yourself, then
- * one pane carrying every registered tool.
- *
- * The pinned/recent rail that used to sit on top is gone. It was a summary of
- * data the page already shows — the star on a card and the command palette both
- * still work — and this is a personal launcher, so the space above the tool list
- * is worth more as somewhere to put your own things.
+ * The whole home page below the hero: two optional extension bands followed by
+ * one searchable, category-filterable catalogue carrying every registered tool.
+ * Empty bands are hidden by default and can be exposed as authoring placeholders
+ * through `siteConfig.home.emptySlots`.
  *
  * The categories are one pane rather than four because four identical frames
  * stacked down the page read as four unrelated widgets, while one pane with
  * hairline-divided bands reads as a single list of everything you own. It also
- * keeps the whole page inside the two-blurred-layers-per-region budget with room
- * to spare: three panes, no nesting.
- *
- * There is no sidebar, no tag filter and no inline search box — searching is ⌘K.
+ * keeps the whole page inside the two-blurred-layers-per-region budget: one
+ * catalogue pane plus at most two owner panes, with no blurred nesting.
  *
  * It is a client component because pins and history come out of localStorage.
  * Everything else it renders is static config, so the prerendered HTML already
@@ -36,10 +36,17 @@ import type { Locale } from '@/types/i18n'
  */
 export interface HomeShellLabels {
   card: ToolCardLabels
+  discovery: HomeDiscoveryLabels & {
+    resultCount: string
+    resultCountFiltered: string
+  }
   /** Template such as "{count} tools". */
   countLabel: string
   emptyTitle: string
   emptyDesc: string
+  noResultsTitle: string
+  noResultsDesc: string
+  clearFilters: string
   /** Heading shown on a reserved band until its slot is filled. */
   slotTitle: string
   /** Template with `{name}`, naming the slot component to edit. */
@@ -49,6 +56,7 @@ export interface HomeShellLabels {
 export interface HomeShellProps {
   locale: Locale
   labels: HomeShellLabels
+  settings: HomeConfig
   /** Fills the first reserved band. */
   topSlot?: ReactNode
   /** Fills the second reserved band. */
@@ -57,26 +65,33 @@ export interface HomeShellProps {
   slot?: ReactNode
 }
 
-/**
- * One fillable pane.
- *
- * `min-h-71` is 17.75rem = 284px, measured off a one-row category pane at `lg`
- * (24 top pad + 36 header + 16 gap + 184 card row + 24 bottom pad), so an empty
- * band occupies exactly the footprint a filled one will and nothing jumps the day
- * something lands here. Both bands use it, which is what keeps them identical.
- */
+/** One fillable pane with configurable hidden, compact or full empty states. */
 function ReservedBand({
   title,
   desc,
+  emptyPresentation,
   children,
 }: {
   title: string
   desc: string
+  emptyPresentation: EmptySlotPresentation
   children?: ReactNode
 }) {
+  const filled = children !== null && children !== undefined && children !== false
+  if (!shouldRenderHomeSlot(filled, emptyPresentation)) return null
+
   return (
-    <GlassCard pad="panel" data-section-panel="" className="flex min-h-71 flex-col rounded-xl">
-      {children ?? (
+    <GlassCard
+      pad="panel"
+      data-section-panel=""
+      className={cn(
+        'flex flex-col rounded-xl',
+        !filled && (emptyPresentation === 'full' ? 'min-h-71' : 'min-h-32'),
+      )}
+    >
+      {filled ? (
+        children
+      ) : (
         /* A dashed frame rather than an `EmptyState`: this is not a list that
            happens to be empty, it is a slot waiting to be filled, and the dashed
            edge says so. It also stays a frame and not a second surface — no
@@ -93,21 +108,53 @@ function ReservedBand({
   )
 }
 
-export function HomeShell({ locale, labels, topSlot, midSlot, slot }: HomeShellProps) {
+export function HomeShell({ locale, labels, settings, topSlot, midSlot, slot }: HomeShellProps) {
   const { favorites, toggle } = useFavorites()
   const { push } = useRecent()
+  const [query, setQuery] = useState('')
+  const [categoryId, setCategoryId] = useState<string | null>(null)
 
-  const groups = useMemo(() => groupByCategory(), [])
+  const selectedTools = useMemo(
+    () => selectHomeTools(enabledTools, { query, categoryId }),
+    [query, categoryId],
+  )
+  const groups = useMemo(() => groupByCategory(selectedTools), [selectedTools])
+  const counts = useMemo(() => categoryCounts(), [])
+  const categoryOptions = useMemo(
+    () =>
+      orderedCategories
+        .filter((category) => (counts[category.id] ?? 0) > 0)
+        .map((category) => ({
+          id: category.id,
+          label: category.name[locale],
+          count: counts[category.id] ?? 0,
+        })),
+    [counts, locale],
+  )
+  const filtered = query.trim() !== '' || categoryId !== null
+
+  function clearFilters() {
+    setQuery('')
+    setCategoryId(null)
+  }
 
   return (
     <>
       {/* Each band names the component that fills it, so the copy doubles as the
           instruction and the two are never confused for each other. */}
-      <ReservedBand title={labels.slotTitle} desc={fill(labels.slotDesc, { name: 'HomeTopSlot' })}>
+      <ReservedBand
+        title={labels.slotTitle}
+        desc={fill(labels.slotDesc, { name: 'HomeTopSlot' })}
+        emptyPresentation={settings.emptySlots.top}
+      >
         {topSlot}
       </ReservedBand>
 
-      <ReservedBand title={labels.slotTitle} desc={fill(labels.slotDesc, { name: 'HomeMidSlot' })}>
+      <ReservedBand
+        title={labels.slotTitle}
+        desc={fill(labels.slotDesc, { name: 'HomeMidSlot' })}
+        emptyPresentation={settings.emptySlots.middle}
+      >
         {midSlot}
       </ReservedBand>
 
@@ -128,8 +175,39 @@ export function HomeShell({ locale, labels, topSlot, midSlot, slot }: HomeShellP
           '[&>section]:py-5 [&>section:first-child]:pt-0 [&>section:last-child]:pb-0',
         )}
       >
+        {enabledTools.length > 0 &&
+        (settings.showInlineSearch || settings.showCategoryNavigation) ? (
+          <HomeDiscovery
+            labels={labels.discovery}
+            query={query}
+            categoryId={categoryId}
+            categories={categoryOptions}
+            resultLabel={fill(
+              filtered ? labels.discovery.resultCountFiltered : labels.discovery.resultCount,
+              { count: selectedTools.length, total: enabledTools.length },
+            )}
+            showSearch={settings.showInlineSearch}
+            showCategories={settings.showCategoryNavigation}
+            onQueryChange={setQuery}
+            onCategoryChange={setCategoryId}
+            onClear={clearFilters}
+          />
+        ) : null}
+
         {groups.length === 0 ? (
-          <EmptyState icon={PackageOpen} title={labels.emptyTitle} description={labels.emptyDesc} />
+          <EmptyState
+            icon={filtered ? SearchX : PackageOpen}
+            title={filtered ? labels.noResultsTitle : labels.emptyTitle}
+            description={filtered ? labels.noResultsDesc : labels.emptyDesc}
+            action={
+              filtered ? (
+                <Button variant="outline" size="sm" onClick={clearFilters}>
+                  {labels.clearFilters}
+                </Button>
+              ) : undefined
+            }
+            className={filtered ? 'mt-5' : undefined}
+          />
         ) : (
           groups.map(({ category, tools }) => (
             <CategorySection

@@ -11,7 +11,7 @@ import type { ToolCategory, ToolItem } from '@/types/tool'
  *
  * Adding an entry = appending one object to `tools` below. No component
  * changes, no route changes, no imports. The card, the group heading, the
- * sidebar count, the command palette, the search index and the page at
+ * category count, the command palette, the search index and the page at
  * `/<locale>/t/<id>/` all pick it up automatically.
  *
  * Field guide
@@ -20,7 +20,7 @@ import type { ToolCategory, ToolItem } from '@/types/tool'
  *               localStorage key for favourites/recents. Renaming it orphans a
  *               visitor's saved data, so pick it once.
  *   name/desc   `{ zh, en }`. Keep `desc` to roughly 40 characters: the card
- *               clamps it to a single line.
+ *               clamps it to two lines.
  *   categoryId  Must match a `categories[].id` below, or the build fails.
  *   icon        A name registered in `lib/icons.ts`. Unknown names fall back to
  *               a wrench and are reported at build time.
@@ -33,10 +33,11 @@ import type { ToolCategory, ToolItem } from '@/types/tool'
  *   route       Optional override for 'internal', relative to the locale root.
  *               Omit it and the generated page shell is used. If you set it,
  *               you are responsible for creating that page.
- *   tags        Free-form, searchable, rendered on the card.
+ *   tags        Free-form, searchable, and shown on the tool detail page.
  *   accent      Icon-tile gradient. One of `accentNames` in `types/tool.ts`.
  *   badge       'new' | 'beta' | 'wip'
- *   pinned      Shows the entry in the "Pinned" rail for every visitor.
+ *   pinned      Optional signal exposed through `lib/tools.ts` for a custom
+ *               pinned surface. The built-in home catalogue does not reorder.
  *   enabled     Defaults to true. `false` hides it everywhere without deleting.
  *   pinyin      Optional pinyin initials so ⌘K matches "wdbj" against
  *               "我的笔记". Purely additive.
@@ -47,7 +48,7 @@ import type { ToolCategory, ToolItem } from '@/types/tool'
 
 /* Four everyday groups rather than technical ones: you are sorting your own
    pages by when you reach for them, not by what they are built out of. Rename
-   them freely — the ids are what the URLs and the sidebar use, the names are
+   them freely — the ids are what filters and anchors use, the names are
    just labels. */
 export const categories: ToolCategory[] = [
   { id: 'daily', name: { zh: '常用', en: 'Everyday' }, icon: 'Zap', order: 1 },
@@ -65,7 +66,7 @@ export const categories: ToolCategory[] = [
    and every one of them carries `demo: true` so it is impossible to mistake a
    placeholder for something that works.
 
-   `tags` are printed verbatim in both languages, so these use language-neutral
+   `tags` are printed verbatim on the detail page, so these use language-neutral
    keywords. The registry accepts anything — putting Chinese words here works
    and makes them searchable — but a Chinese chip on an English card reads as a
    bug, so the search index leans on the bilingual `name`/`desc`/`pinyin`

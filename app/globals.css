@@ -230,15 +230,14 @@
   --glass-blur: 32px;
   --glass-saturate: 1.8;
 
-  /* Background glow lobes. Toned down from the first pass: at 0.18/0.15/0.16
-     the three lobes met in the middle of the page and read as a coloured haze
-     behind the panels rather than as light coming from somewhere. Pulling them
-     back leaves the aurora legible at the edges, and every measured contrast
-     ratio moves in the safe direction, since text is measured over the peak. */
-  --glow-1: oklch(0.62 0.22 268 / 0.14);
-  --glow-2: oklch(0.62 0.24 305 / 0.12);
-  --glow-3: oklch(0.74 0.14 205 / 0.12);
-  --noise-opacity: 0.035;
+  /* The artwork remains recognisable while a neutral veil keeps glass-panel
+     contrast stable over both its sunlit and shaded regions. */
+  --site-background-filter: saturate(0.86) brightness(0.94);
+  --site-background-scrim: linear-gradient(
+    180deg,
+    oklch(0.985 0.004 270 / 0.28),
+    oklch(0.96 0.006 270 / 0.5)
+  );
 
   /* Elevation. Every step carries a tight contact shadow plus a wide, very soft
      ambient one: the contact layer says the surface is off the page, the
@@ -335,16 +334,16 @@
   --glass-ring: oklch(1 0 0 / 0.06);
   --glass-blur: 30px;
   /* Below light mode's 1.8: saturating a dark field also lifts its luminance,
-     and past ~1.4 the glow lobes started showing through the panels as colour
-     patches instead of as light. */
+     and past ~1.4 the artwork starts showing through panels as colour patches
+     instead of a coherent backdrop. */
   --glass-saturate: 1.3;
 
-  /* Cap is 0.35; these sit far below it. See the note in the light block: the
-     lobes exist to tint the corners of a deep-space page, not to fill it. */
-  --glow-1: oklch(0.56 0.22 268 / 0.21);
-  --glow-2: oklch(0.54 0.24 305 / 0.17);
-  --glow-3: oklch(0.64 0.14 205 / 0.15);
-  --noise-opacity: 0.045;
+  --site-background-filter: saturate(0.72) brightness(0.56);
+  --site-background-scrim: linear-gradient(
+    180deg,
+    oklch(0.08 0.012 275 / 0.46),
+    oklch(0.055 0.01 275 / 0.66)
+  );
 
   --elev-1: 0 1px 2px -1px oklch(0 0 0 / 0.5), 0 1px 3px oklch(0 0 0 / 0.35);
   --elev-2:
@@ -374,9 +373,6 @@
   --accent-foreground: oklch(0.3 0.12 305);
   --brand-from: oklch(0.58 0.22 305);
   --brand-to: oklch(0.47 0.21 322);
-  --glow-1: oklch(0.6 0.24 305 / 0.14);
-  --glow-2: oklch(0.6 0.22 270 / 0.12);
-  --glow-3: oklch(0.72 0.16 330 / 0.11);
 }
 
 .dark[data-accent='violet'] {
@@ -385,9 +381,6 @@
   --ring: oklch(0.72 0.19 305);
   --accent: oklch(0.3 0.06 305);
   --accent-foreground: oklch(0.92 0.04 305);
-  --glow-1: oklch(0.54 0.25 305 / 0.21);
-  --glow-2: oklch(0.54 0.22 270 / 0.17);
-  --glow-3: oklch(0.62 0.17 330 / 0.15);
 }
 
 [data-accent='cyan'] {
@@ -397,9 +390,6 @@
   --accent-foreground: oklch(0.3 0.08 220);
   --brand-from: oklch(0.6 0.13 214);
   --brand-to: oklch(0.48 0.13 232);
-  --glow-1: oklch(0.7 0.15 205 / 0.14);
-  --glow-2: oklch(0.62 0.2 250 / 0.12);
-  --glow-3: oklch(0.75 0.14 175 / 0.11);
 }
 
 .dark[data-accent='cyan'] {
@@ -408,9 +398,6 @@
   --ring: oklch(0.78 0.13 205);
   --accent: oklch(0.3 0.05 205);
   --accent-foreground: oklch(0.92 0.04 205);
-  --glow-1: oklch(0.6 0.15 205 / 0.21);
-  --glow-2: oklch(0.54 0.2 250 / 0.17);
-  --glow-3: oklch(0.64 0.14 175 / 0.15);
 }
 
 [data-accent='emerald'] {
@@ -420,9 +407,6 @@
   --accent-foreground: oklch(0.29 0.08 158);
   --brand-from: oklch(0.58 0.14 158);
   --brand-to: oklch(0.47 0.13 178);
-  --glow-1: oklch(0.68 0.15 158 / 0.14);
-  --glow-2: oklch(0.7 0.14 190 / 0.11);
-  --glow-3: oklch(0.75 0.15 120 / 0.1);
 }
 
 .dark[data-accent='emerald'] {
@@ -431,9 +415,6 @@
   --ring: oklch(0.76 0.15 158);
   --accent: oklch(0.3 0.05 158);
   --accent-foreground: oklch(0.92 0.04 158);
-  --glow-1: oklch(0.6 0.16 158 / 0.21);
-  --glow-2: oklch(0.6 0.14 190 / 0.17);
-  --glow-3: oklch(0.64 0.16 120 / 0.15);
 }
 
 /* Density: compact */
@@ -782,68 +763,48 @@
 }
 
 /* ==========================================================================
-   Background layers
+   Site background
    --------------------------------------------------------------------------
-   Pure CSS radial gradients — no raster background images anywhere. Both
-   layers are `fixed`, so they never jitter while the page scrolls.
+   A fixed, same-origin artwork layer. The image crop is supplied by config;
+   theme tokens own the neutral scrim that protects foreground contrast.
    ========================================================================== */
 @layer components {
-  .glow-layer {
+  .site-background {
     position: fixed;
     inset: 0;
     z-index: -20;
     overflow: hidden;
     pointer-events: none;
     contain: strict;
+    isolation: isolate;
+    background-color: var(--background);
   }
 
-  .glow-lobe {
+  .site-background::before,
+  .site-background::after {
+    content: '';
     position: absolute;
-    border-radius: 50%;
-    transform: translate3d(0, 0, 0);
-  }
-
-  .glow-lobe--a {
-    inline-size: clamp(22rem, 58vw, 48rem);
-    block-size: clamp(22rem, 58vw, 48rem);
-    inset-block-start: -14vh;
-    inset-inline-start: -12vw;
-    background: radial-gradient(circle at 50% 50%, var(--glow-1), transparent 68%);
-    filter: blur(96px);
-    animation: glow-drift-a 28s var(--ease-glide) infinite alternate;
-  }
-
-  .glow-lobe--b {
-    inline-size: clamp(20rem, 50vw, 42rem);
-    block-size: clamp(20rem, 50vw, 42rem);
-    inset-block-start: 8vh;
-    inset-inline-end: -14vw;
-    background: radial-gradient(circle at 50% 50%, var(--glow-2), transparent 70%);
-    filter: blur(112px);
-    animation: glow-drift-b 34s var(--ease-glide) infinite alternate;
-  }
-
-  .glow-lobe--c {
-    inline-size: clamp(18rem, 44vw, 36rem);
-    block-size: clamp(18rem, 44vw, 36rem);
-    inset-block-end: -18vh;
-    inset-inline-start: 22vw;
-    background: radial-gradient(circle at 50% 50%, var(--glow-3), transparent 72%);
-    filter: blur(88px);
-    animation: glow-drift-c 40s var(--ease-glide) infinite alternate;
-  }
-
-  /* SVG feTurbulence grain, inlined as a data URI so it costs no extra
-     request. It exists to break up the banding a wide radial gradient
-     produces on 8-bit displays. */
-  .noise-layer {
-    position: fixed;
     inset: 0;
-    z-index: -10;
-    pointer-events: none;
-    opacity: var(--noise-opacity);
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
-    background-repeat: repeat;
+  }
+
+  .site-background::before {
+    z-index: -2;
+    background-image: var(--site-background-image);
+    background-position: var(--site-background-position-mobile);
+    background-repeat: no-repeat;
+    background-size: cover;
+    filter: var(--site-background-filter);
+  }
+
+  .site-background::after {
+    z-index: -1;
+    background: var(--site-background-scrim);
+  }
+
+  @media (min-width: 48rem) {
+    .site-background::before {
+      background-position: var(--site-background-position);
+    }
   }
 
   /* A headline that fades from the text colour into the active accent.
@@ -1004,75 +965,6 @@
     animation: rise-in 180ms var(--ease-glide) both;
   }
 
-  /* Card hover "shimmer": a 1px gradient stroke drawn by masking a gradient
-     down to the border box. It is a real element rather than a pseudo-element
-     so the fade is a plain Tailwind opacity transition (transform/opacity only)
-     and needs no arbitrary variant.
-
-     Default is `display: none`: without mask compositing the gradient would
-     flood the whole card, so unsupported browsers get no shimmer at all rather
-     than a broken one. */
-  .card-shimmer {
-    display: none;
-  }
-
-  @supports ((mask-composite: exclude) or (-webkit-mask-composite: xor)) {
-    .card-shimmer {
-      display: block;
-      border-radius: inherit;
-      padding: 1px;
-      background: linear-gradient(
-        120deg,
-        transparent 18%,
-        var(--glass-highlight) 42%,
-        color-mix(in oklab, var(--primary) 60%, transparent) 54%,
-        transparent 82%
-      );
-      -webkit-mask:
-        linear-gradient(#000, #000) content-box,
-        linear-gradient(#000, #000);
-      -webkit-mask-composite: xor;
-      mask:
-        linear-gradient(#000, #000) content-box,
-        linear-gradient(#000, #000);
-      mask-composite: exclude;
-    }
-  }
-
-  /* A specular highlight that sweeps across a card on hover — the "glass
-     catches the light" half of the hover state, where `.card-shimmer` is the
-     "glass has an edge" half.
-
-     Driven from the card's own `[data-card]` wrapper rather than a Tailwind
-     `group-hover:` variant so the whole effect is one declaration block: the
-     travel is a single `transform`, which keeps it on the compositor. Tinted
-     with `--primary`, so it follows whichever accent preset is active. */
-  .card-sheen {
-    position: absolute;
-    inset-block: -40%;
-    inset-inline-start: -40%;
-    inline-size: 24%;
-    border-radius: 999px;
-    pointer-events: none;
-    opacity: 0;
-    background: linear-gradient(
-      100deg,
-      transparent,
-      color-mix(in oklab, var(--primary) 20%, transparent),
-      transparent
-    );
-    transform: rotate(10deg) translate3d(0, 0, 0);
-    transition:
-      transform 240ms var(--ease-glide),
-      opacity 240ms var(--ease-glide);
-  }
-
-  [data-card]:hover .card-sheen,
-  [data-card]:focus-within .card-sheen {
-    opacity: 1;
-    transform: rotate(10deg) translate3d(700%, 0, 0);
-  }
-
   /* Card entrance. The delay is set inline, per card, so a grid resolves as a
      short cascade instead of twelve cards popping in at once. `both` holds the
      first frame, which is why the cascade reads as intentional rather than as
@@ -1099,38 +991,10 @@
   }
 }
 
-/* Only transform and opacity animate — never layout properties. */
-@keyframes glow-drift-a {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(4vw, 5vh, 0) scale(1.08);
-  }
-}
-
-@keyframes glow-drift-b {
-  from {
-    transform: translate3d(0, 0, 0) scale(1.05);
-  }
-  to {
-    transform: translate3d(-5vw, 4vh, 0) scale(1);
-  }
-}
-
-@keyframes glow-drift-c {
-  from {
-    transform: translate3d(0, 0, 0) scale(1);
-  }
-  to {
-    transform: translate3d(3vw, -4vh, 0) scale(1.12);
-  }
-}
-
 @keyframes rise-in {
   from {
     opacity: 0;
-    transform: translate3d(0, 10px, 0);
+    transform: translate3d(0, 6px, 0);
   }
   to {
     opacity: 1;
@@ -1219,10 +1083,6 @@
        opaque panel it would just be a second border one pixel inside the first. */
     --glass-ring: transparent;
     --glass-blur: 0px;
-    --glow-1: transparent;
-    --glow-2: transparent;
-    --glow-3: transparent;
-    --noise-opacity: 0;
   }
 
   .dark {
@@ -1231,10 +1091,6 @@
     --glass-highlight: transparent;
     --glass-ring: transparent;
     --glass-blur: 0px;
-    --glow-1: transparent;
-    --glow-2: transparent;
-    --glow-3: transparent;
-    --noise-opacity: 0;
   }
 
   /* Unprefixed only — see the note on `@utility glass`. The tokens above already
@@ -1261,15 +1117,14 @@
     display: none;
   }
 
-  /* Same reasoning as the glow lobes: the halo is a coloured blur bleeding out
+  /* The halo is a coloured blur bleeding out
      from under a control, which is exactly the effect this preference asks to
      be spared. The focus ring is unaffected and remains the focus indicator. */
   .halo::after {
     display: none;
   }
 
-  .glow-layer,
-  .noise-layer {
+  .site-background {
     display: none;
   }
 }
@@ -1281,23 +1136,11 @@
   }
 }
 
-/* No displacement, no drifting glow. Opacity-only transitions, capped at
-   100ms, so state changes stay legible without motion. */
+/* Opacity-only transitions, capped at 100ms, so state changes stay legible
+   without motion. */
 @media (prefers-reduced-motion: reduce) {
   html {
     scroll-behavior: auto;
-  }
-
-  /* This rule is unlayered while `.glow-lobe--*` lives in `@layer components`,
-     and unlayered styles outrank layered ones — no `!important` needed. */
-  .glow-lobe {
-    animation: none;
-  }
-
-  /* The sheen is nothing but travel: with transforms suppressed it would park a
-     bright bar on the card's left edge, so it is removed rather than frozen. */
-  .card-sheen {
-    display: none;
   }
 
   *,

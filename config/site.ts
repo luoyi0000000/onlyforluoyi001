@@ -1,6 +1,33 @@
 import type { Localized } from '@/types/i18n'
 import type { ThemeAccent } from '@/types/tool'
 
+export type EmptySlotPresentation = 'hidden' | 'compact' | 'full'
+
+export interface HomeConfig {
+  /** A visible search field in the catalogue. The command palette still works. */
+  showInlineSearch: boolean
+  /** Category chips that narrow the catalogue without leaving the page. */
+  showCategoryNavigation: boolean
+  /**
+   * Empty JSX slots are hidden by default. Use `compact` or `full` while
+   * designing to keep a labelled placeholder on the page. Filled slots always
+   * render, whichever value is selected here.
+   */
+  emptySlots: {
+    top: EmptySlotPresentation
+    middle: EmptySlotPresentation
+  }
+}
+
+export interface BackgroundConfig {
+  /** Same-origin asset under `public/`. Use `null` for the plain theme colour. */
+  imageSrc: string | null
+  /** CSS background-position used from the tablet breakpoint upward. */
+  position: string
+  /** Independent crop for narrow portrait screens. */
+  mobilePosition: string
+}
+
 /**
  * Everything a site owner should ever need to change lives here or in
  * `config/tools.ts`. Components read this object; they never hard-code copy,
@@ -18,6 +45,7 @@ export interface SiteConfig {
     /** Alt text for `logoSrc`. Ignored when the generated mark is used. */
     logoAlt: Localized
   }
+  background: BackgroundConfig
   /** One-line positioning statement, used in metadata and the hero. */
   slogan: Localized
   /** Longer description for `<meta name="description">`. */
@@ -32,6 +60,7 @@ export interface SiteConfig {
     /** Whether the hero can be dismissed and remembered in localStorage. */
     dismissible: boolean
   }
+  home: HomeConfig
   footer: {
     links: ReadonlyArray<{ label: Localized; href: string; external?: boolean }>
   }
@@ -51,6 +80,12 @@ export const siteConfig: SiteConfig = {
   brand: {
     logoSrc: null,
     logoAlt: { zh: '工具箱标志', en: 'Toolbox logo' },
+  },
+
+  background: {
+    imageSrc: '/images/toolbox-background.png',
+    position: 'center center',
+    mobilePosition: '66% center',
   },
 
   slogan: {
@@ -86,6 +121,15 @@ export const siteConfig: SiteConfig = {
       href: 'about',
     },
     dismissible: true,
+  },
+
+  home: {
+    showInlineSearch: true,
+    showCategoryNavigation: true,
+    emptySlots: {
+      top: 'hidden',
+      middle: 'hidden',
+    },
   },
 
   footer: {
